@@ -29,7 +29,7 @@ a {
     --bs-btn-hover-border-color: var(--color-primary-dark);
     --bs-btn-active-bg: var(--color-primary-dark);
     --bs-btn-active-border-color: var(--color-primary-dark);
-    --bs-btn-focus-shadow-rgb: 0, 173, 181;
+    --bs-btn-focus-shadow-rgb: var(--color-primary-rgb);
     display: inline-flex;
     align-items: center;
     gap: .5rem;
@@ -68,8 +68,8 @@ a {
     flex: 0 0 auto;
     place-items: center;
     border-radius: 6px;
-    background: var(--color-primary);
-    color: var(--color-dark);
+    background: var(--color-brand-background);
+    color: var(--color-brand-text);
     font-size: .78rem;
     font-weight: 800;
     letter-spacing: .04em;
@@ -238,7 +238,7 @@ a {
     display: inline-flex;
     align-items: center;
     border-radius: 3px;
-    background: rgba(0, 173, 181, .12);
+    background: rgba(var(--color-primary-rgb), .12);
     color: var(--color-primary-dark);
     font-size: .62rem;
     font-weight: 800;
@@ -264,7 +264,7 @@ a {
     flex: 0 0 auto;
     place-items: center;
     border-radius: 5px;
-    background: rgba(0, 173, 181, .1);
+    background: rgba(var(--color-primary-rgb), .1);
     color: var(--color-primary-dark);
 }
 
@@ -412,7 +412,7 @@ textarea.form-control {
 .form-control:focus,
 .form-select:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 .2rem rgba(0, 173, 181, .14);
+    box-shadow: 0 0 0 .2rem rgba(var(--color-primary-rgb), .14);
 }
 
 .form-control::placeholder {
@@ -926,7 +926,7 @@ textarea.form-control {
     padding: .75rem 1rem;
     border-left: 3px solid var(--color-primary);
     border-radius: 0 4px 4px 0;
-    background: rgba(0, 173, 181, .08);
+    background: rgba(var(--color-primary-rgb), .08);
     color: var(--color-dark-secondary);
     font-size: .74rem;
 }

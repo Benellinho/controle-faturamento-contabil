@@ -3,15 +3,35 @@
   --color-dark-secondary: #393e46;
   --color-primary: #00adb5;
   --color-primary-dark: #008d94;
+  --color-primary-rgb: 0, 173, 181;
+  --color-brand-background: var(--color-primary);
+  --color-brand-text: var(--color-dark);
   --color-background: #eeeeee;
   --color-surface: #ffffff;
   --color-text: #222831;
   --color-text-muted: #6c757d;
   --color-border: #dfe2e5;
   --sidebar-width: 250px;
-  --bs-primary: #00adb5;
-  --bs-primary-rgb: 0, 173, 181;
-  --bs-body-color: #222831;
-  --bs-body-bg: #eeeeee;
-  --bs-border-color: #dfe2e5;
+
+  --bs-primary: var(--color-primary);
+  --bs-primary-rgb: var(--color-primary-rgb);
+  --bs-body-color: var(--color-text);
+  --bs-body-bg: var(--color-background);
+  --bs-border-color: var(--color-border);
+}
+
+/* Aplique data-theme="sage" ao elemento <html> para usar esta paleta. */
+:root[data-theme="sage"] {
+  --color-dark: #798777;
+  --color-dark-secondary: #a2b29f;
+  --color-primary: #798777;
+  --color-primary-dark: #657263;
+  --color-primary-rgb: 121, 135, 119;
+  --color-brand-background: #bdd2b6;
+  --color-brand-text: #3f493d;
+  --color-background: #f8ede3;
+  --color-surface: #fffaf6;
+  --color-text: #3f493d;
+  --color-text-muted: #798777;
+  --color-border: #bdd2b6;
 }
