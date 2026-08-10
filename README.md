@@ -12,7 +12,7 @@ O MVP deverá permitir:
 - cadastrar usuários internos;
 - cadastrar categorias globais de faturamento;
 - criar competências mensais por empresa;
-- registrar lançamentos de faturamento;
+- registrar o lançamento mensal de faturamento com estoques inicial e final;
 - registrar devoluções e estornos;
 - controlar competências em fluxo de conferência;
 - preservar o histórico de alterações;
@@ -63,7 +63,9 @@ DEVOLUCAO_ESTORNO
 → subtrai
 ```
 
-Uma mesma categoria pode possuir vários lançamentos na mesma competência.
+Cada competência mensal pode possuir somente um lançamento ativo. Correções preservam os registros cancelados e criam um único substituto ativo.
+
+Todo lançamento registra também os valores não negativos de estoque inicial e estoque final do mês.
 
 ## Imutabilidade e correções
 
@@ -133,10 +135,17 @@ Regras principais:
 
 ## Documentação
 
-A especificação inicial do banco e das regras de negócio deve ser mantida em:
+A especificação inicial do banco e das regras de negócio está em `docs/modelo-banco.md`. A implementação foi dividida nas seguintes etapas:
 
 ```text
-docs/modelo-banco.md
+docs/
+├── 01-criacao-tabelas-supabase.md
+├── 02-integridade-e-imutabilidade.md
+├── 03-fluxo-das-competencias.md
+├── 04-cancelamento-e-substituicao.md
+├── 05-auth-e-controle-de-acesso.md
+├── 06-calculo-dos-totais.md
+└── 07-integracao-do-backend.md
 ```
 
 A documentação deve ser atualizada sempre que uma decisão estrutural ou regra de negócio do MVP for alterada.
@@ -152,16 +161,18 @@ controle-faturamento-contabil/
 │   └── src/
 ├── supabase/
 │   ├── config.toml
+│   ├── migrations/
 │   └── seed.sql
 ├── docs/
-│   └── modelo-banco.md
+│   ├── modelo-banco.md
+│   └── documentação por etapa
 ├── .gitignore
 ├── .env.example
 ├── package.json
 └── README.md
 ```
 
-As migrations serão adicionadas em `supabase/migrations/` durante a implementação do modelo de banco.
+As alterações estruturais do banco são versionadas em `supabase/migrations/` e devem ser aplicadas sempre na ordem dos identificadores.
 
 ## Variáveis de ambiente
 
@@ -196,7 +207,8 @@ Estado atual:
 - frontend React/Vite configurado;
 - backend Fastify configurado;
 - ambiente local do Supabase configurado;
-- migrations do modelo de negócio ainda não implementadas.
+- migrations do modelo de negócio implementadas;
+- endpoints de negócio do backend ainda não implementados.
 
 ## Convenções iniciais
 

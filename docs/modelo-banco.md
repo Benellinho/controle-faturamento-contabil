@@ -10,7 +10,9 @@ Este documento consolida as decisões atuais do MVP para o sistema interno de co
 - A autenticação será feita pelo Supabase Auth.
 - Todos os usuários cadastrados no sistema serão usuários internos.
 - O faturamento será sempre mensal.
-- Uma competência poderá possuir vários lançamentos na mesma categoria e no mesmo mês.
+- Cada competência poderá possuir somente um lançamento `ATIVO` no mês.
+- Lançamentos cancelados e substitutos permanecem armazenados para preservar o histórico.
+- Todo lançamento deverá registrar os valores dos estoques inicial e final do mês.
 - As categorias de faturamento serão globais e poderão ser usadas por todas as empresas.
 - Os lançamentos nunca poderão ser editados ou excluídos fisicamente.
 - Toda correção será feita obrigatoriamente por cancelamento + substituição.
@@ -101,8 +103,8 @@ As categorias serão globais e compartilhadas entre todas as empresas.
 - Para preservar o histórico, uma categoria já utilizada não deverá ter seu significado alterado.
 - Se uma categoria deixar de ser utilizada, deverá ser desativada.
 - Caso uma classificação nova seja necessária, deverá ser criada uma nova categoria.
-- A relação física é `CATEGORIA 1 → N LANCAMENTOS`.
-- Uma categoria poderá possuir vários lançamentos ativos na mesma competência.
+- A relação física é `CATEGORIA 1 → N LANCAMENTOS` ao longo das competências.
+- Uma competência poderá possuir somente um lançamento ativo, classificado por uma categoria.
 
 ---
 
@@ -140,8 +142,8 @@ Representa o mês de apuração de uma empresa.
 
 ### ABERTA
 
-- Usuários do escritório podem registrar lançamentos.
-- Uma mesma categoria poderá possuir vários lançamentos no mês.
+- Usuários do escritório podem registrar o lançamento mensal.
+- Somente um lançamento poderá permanecer ativo no mês.
 - Lançamentos já criados não podem ser editados.
 - Se houver erro, o lançamento deverá ser cancelado e obrigatoriamente substituído.
 - A competência poderá ser marcada como `sem_movimento` quando não existir faturamento no mês.
@@ -160,8 +162,8 @@ Representa o mês de apuração de uma empresa.
 
 - A conferência identificou necessidade de correção.
 - A entrada em `REABERTA` exige justificativa.
-- Lançamentos incorretos poderão ser cancelados e obrigatoriamente substituídos.
-- Novos lançamentos necessários à correção poderão ser criados.
+- Se ainda não houver lançamento ativo, o lançamento mensal poderá ser criado.
+- Lançamentos incorretos somente poderão ser corrigidos por cancelamento e substituição.
 - Após as correções, a competência deverá voltar obrigatoriamente para `EM_CONFERENCIA`.
 
 ### FINALIZADA
@@ -294,6 +296,8 @@ FINALIZADA → REABERTA
 | NN | tipo_lancamento | Texto Limitado(30) |
 | NN | data_referencia | Data |
 | NN | valor | Número Decimal(14,2) |
+| NN | estoque_inicial | Número Decimal(14,2) |
+| NN | estoque_final | Número Decimal(14,2) |
 |  | observacao | Texto |
 | NN | status | Texto Limitado(15) |
 | FK | cancelado_por_usuario_id | UUID NULL |
@@ -349,31 +353,27 @@ Total líquido        R$  8.500,00
 
 ---
 
-# QUANTIDADE DE LANCAMENTOS POR CATEGORIA
+# REGRA DE LANÇAMENTO MENSAL ÚNICO
 
-Uma mesma categoria poderá possuir vários lançamentos ativos na mesma competência, inclusive na mesma data.
+Cada competência representa uma empresa em determinado ano e mês e poderá possuir, no máximo, um lançamento `ATIVO`.
 
-Portanto, NÃO deverá existir:
+A regra será garantida por um índice único parcial equivalente a:
 
-```text
-UNIQUE (
-  competencia_id,
-  categoria_id,
-  data_referencia
-)
+```sql
+unique (competencia_id)
+where status = 'ATIVO'
 ```
+
+Poderão existir vários registros físicos na mesma competência somente para preservar uma cadeia de correções. Nesse caso, todos os anteriores estarão `CANCELADO` e apenas o último substituto permanecerá `ATIVO`.
 
 Exemplo válido:
 
-| Data | Categoria | Tipo | Valor | Status |
-|---|---|---|---:|---|
-| 01/08/2026 | Comércio | FATURAMENTO | R$ 10.000,00 | ATIVO |
-| 01/08/2026 | Comércio | FATURAMENTO | R$ 7.500,00 | ATIVO |
-| 01/08/2026 | Comércio | DEVOLUCAO_ESTORNO | R$ 500,00 | ATIVO |
+| ID | Competência | Valor | Status | Substitui |
+|---:|---|---:|---|---:|
+| 100 | 08/2026 | R$ 10.000,00 | CANCELADO | — |
+| 101 | 08/2026 | R$ 9.500,00 | ATIVO | 100 |
 
-Total líquido da categoria:
-
-`10.000 + 7.500 - 500 = R$ 17.000,00`
+Não será permitido criar dois lançamentos ativos independentes para a mesma competência.
 
 ---
 
@@ -391,6 +391,8 @@ Campos imutáveis:
 | tipo_lancamento |
 | data_referencia |
 | valor |
+| estoque_inicial |
+| estoque_final |
 | observacao |
 | created_at |
 
@@ -403,6 +405,8 @@ Nenhuma correção poderá sobrescrever:
 - tipo;
 - data;
 - valor;
+- estoque inicial;
+- estoque final;
 - observação.
 
 ---
@@ -416,6 +420,15 @@ valor > 0
 ```
 
 Não serão utilizados valores negativos.
+
+Os campos de estoque deverão respeitar:
+
+```text
+estoque_inicial >= 0
+estoque_final >= 0
+```
+
+Os estoques são informações mensais obrigatórias do lançamento e não alteram diretamente o sinal do faturamento.
 
 O sinal contábil será determinado por `tipo_lancamento`:
 
@@ -677,7 +690,7 @@ SUM(DEVOLUCAO_ESTORNO ATIVO)
 
 ### Total da competência
 
-Soma líquida de todos os lançamentos ativos da competência.
+Efeito líquido do único lançamento ativo da competência.
 
 ### Faturamento acumulado
 
@@ -803,6 +816,9 @@ mes BETWEEN 1 AND 12
 
 LANCAMENTOS_FATURAMENTO:
 valor > 0
+estoque_inicial >= 0
+estoque_final >= 0
+somente um registro ATIVO por competencia_id
 substitui_lancamento_id UNIQUE quando não NULL
 substitui_lancamento_id != id
 ```

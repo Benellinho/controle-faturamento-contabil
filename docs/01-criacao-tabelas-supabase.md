@@ -24,6 +24,8 @@ Também serão configurados:
 
 Regras mais complexas, como transição de competências, imutabilidade dos lançamentos e cancelamento com substituição atômica, serão implementadas em migrations posteriores.
 
+> A estrutura desta etapa é a base histórica. A etapa 02 acrescenta `estoque_inicial`, `estoque_final` e a regra final de somente um lançamento ativo por competência.
+
 ## 2. Conceitos importantes
 
 ### Migration
@@ -496,7 +498,7 @@ revoke execute on functions from anon, authenticated;
 - coerência dos campos de cancelamento;
 - um lançamento não pode substituir a si próprio;
 - somente um substituto direto por lançamento;
-- nenhuma restrição impede vários lançamentos na mesma categoria e data.
+- nesta etapa isolada ainda não existe a unicidade mensal; ela é adicionada na etapa 02.
 
 ## 7. O que ainda não está implementado
 
