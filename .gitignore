@@ -12,3 +12,6 @@ dist/
 
 .DS_Store
 Thumbs.db
+
+# Planejamento local de commits
+docs/comits.md

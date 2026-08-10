@@ -99,7 +99,7 @@ Uma competência pode ser marcada como `sem_movimento` quando não existir fatur
 
 Uma competência marcada como sem movimento não pode possuir lançamentos ativos.
 
-## Stack prevista
+## Stack
 
 ### Banco e autenticação
 
@@ -110,7 +110,11 @@ Uma competência marcada como sem movimento não pode possuir lançamentos ativo
 
 ### Frontend / Backend
 
-A stack da aplicação será definida durante a implementação inicial.
+- React 19;
+- Vite 8;
+- Fastify 5;
+- Node.js 22;
+- cliente JavaScript do Supabase.
 
 ## Segurança
 
@@ -137,28 +141,45 @@ docs/modelo-banco.md
 
 A documentação deve ser atualizada sempre que uma decisão estrutural ou regra de negócio do MVP for alterada.
 
-## Estrutura inicial sugerida
+## Estrutura do projeto
 
 ```text
 controle-faturamento-contabil/
+├── backend/
+│   └── src/
+├── frontend/
+│   ├── public/
+│   └── src/
+├── supabase/
+│   ├── config.toml
+│   └── seed.sql
 ├── docs/
 │   └── modelo-banco.md
 ├── .gitignore
 ├── .env.example
+├── package.json
 └── README.md
 ```
 
-A estrutura de frontend, backend e migrations será adicionada quando a implementação começar.
+As migrations serão adicionadas em `supabase/migrations/` durante a implementação do modelo de banco.
 
 ## Variáveis de ambiente
 
 Credenciais reais nunca devem ser versionadas.
 
-Um arquivo `.env.example` poderá documentar as variáveis necessárias futuramente, por exemplo:
+Cada aplicação possui seu próprio `.env.example`:
 
 ```env
+# frontend/.env
+VITE_API_URL=http://localhost:3000
+VITE_SUPABASE_URL=http://127.0.0.1:54321
+VITE_SUPABASE_ANON_KEY=
+
+# backend/.env
+PORT=3000
+FRONTEND_URL=http://localhost:5173
 SUPABASE_URL=
-SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 ```
 
 O arquivo `.env` real deve permanecer no `.gitignore`.
@@ -171,15 +192,18 @@ Estado atual:
 
 - regras principais definidas;
 - modelo inicial de banco definido;
-- autenticação prevista com Supabase Auth;
-- implementação ainda não iniciada.
+- autenticação configurada com Supabase Auth;
+- frontend React/Vite configurado;
+- backend Fastify configurado;
+- ambiente local do Supabase configurado;
+- migrations do modelo de negócio ainda não implementadas.
 
 ## Convenções iniciais
 
 ### Branch principal
 
 ```text
-main
+master
 ```
 
 ### Branches de desenvolvimento
@@ -208,7 +232,28 @@ fix: prevent invalid competence transition
 
 ## Uso
 
-Projeto de uso interno.
+Requisitos locais:
+
+- Node.js 22;
+- Docker Desktop para executar o Supabase local.
+
+Instale as dependências na raiz:
+
+```bash
+npm install
+```
+
+Copie `frontend/.env.example` e `backend/.env.example` para arquivos `.env` nos respectivos diretórios. Depois, execute cada serviço em um terminal:
+
+```bash
+npm run supabase:start
+npm run dev:backend
+npm run dev:frontend
+```
+
+O frontend fica disponível em `http://localhost:5173`, a API em `http://localhost:3000` e o Supabase Studio em `http://localhost:54323`.
+
+Projeto de uso interno. O cadastro público de usuários está desabilitado; usuários devem ser provisionados de forma administrativa.
 
 Não versionar:
 
@@ -219,4 +264,3 @@ Não versionar:
 - dados reais de clientes;
 - backups do banco;
 - arquivos `.env`.
-
