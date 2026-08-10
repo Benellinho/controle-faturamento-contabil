@@ -1,0 +1,17 @@
+:root {
+  --color-dark: #222831;
+  --color-dark-secondary: #393e46;
+  --color-primary: #00adb5;
+  --color-primary-dark: #008d94;
+  --color-background: #eeeeee;
+  --color-surface: #ffffff;
+  --color-text: #222831;
+  --color-text-muted: #6c757d;
+  --color-border: #dfe2e5;
+  --sidebar-width: 250px;
+  --bs-primary: #00adb5;
+  --bs-primary-rgb: 0, 173, 181;
+  --bs-body-color: #222831;
+  --bs-body-bg: #eeeeee;
+  --bs-border-color: #dfe2e5;
+}
