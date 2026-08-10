@@ -1,121 +1,70 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import AppLayout from './components/layout/AppLayout'
+import Dashboard from './pages/Dashboard/Dashboard'
+import CategoriasPage from './pages/Categorias/CategoriasPage'
+import NovaCategoria from './pages/Categorias/NovaCategoria'
+import ControleFaturamentoPage from './pages/ControleFaturamento/ControleFaturamentoPage'
+import EmpresaDetails from './pages/Empresas/EmpresaDetails'
+import EmpresasPage from './pages/Empresas/EmpresasPage'
+import NovaEmpresa from './pages/Empresas/NovaEmpresa'
+import FaturamentoDetails from './pages/Faturamentos/FaturamentoDetails'
+import FaturamentosPage from './pages/Faturamentos/FaturamentosPage'
+import NovoFaturamento from './pages/Faturamentos/NovoFaturamento'
+import HistoricoPage from './pages/Historico/HistoricoPage'
+import UsuarioDetails from './pages/Usuarios/UsuarioDetails'
+import UsuariosPage from './pages/Usuarios/UsuariosPage'
+import NovoUsuario from './pages/Usuarios/NovoUsuario'
+
+const pages = {
+  dashboard: Dashboard,
+  controle: ControleFaturamentoPage,
+  empresas: EmpresasPage,
+  'empresa-detalhes': EmpresaDetails,
+  'nova-empresa': NovaEmpresa,
+  usuarios: UsuariosPage,
+  'usuario-detalhes': UsuarioDetails,
+  'novo-usuario': NovoUsuario,
+  faturamentos: FaturamentosPage,
+  'faturamento-detalhes': FaturamentoDetails,
+  'novo-faturamento': NovoFaturamento,
+  categorias: CategoriasPage,
+  'nova-categoria': NovaCategoria,
+  historico: HistoricoPage,
+}
+
+const sidebarSection = {
+  'nova-empresa': 'empresas',
+  'empresa-detalhes': 'empresas',
+  'novo-usuario': 'usuarios',
+  'usuario-detalhes': 'usuarios',
+  'novo-faturamento': 'faturamentos',
+  'faturamento-detalhes': 'faturamentos',
+  'nova-categoria': 'categorias',
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [navigation, setNavigation] = useState({ page: 'dashboard', recordId: null, returnPage: null })
+  const CurrentPage = pages[navigation.page]
+
+  function handleNavigate(page, recordId = null) {
+    if (!pages[page]) return
+    setNavigation((current) => ({
+      page,
+      recordId,
+      returnPage: page.endsWith('-detalhes')
+        ? (current.page.endsWith('-detalhes') ? current.returnPage : current.page)
+        : null,
+    }))
+  }
+
+  const activeSidebarPage = navigation.page === 'faturamento-detalhes' && navigation.returnPage === 'controle'
+    ? 'controle'
+    : sidebarSection[navigation.page] ?? navigation.page
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <AppLayout currentPage={activeSidebarPage} onNavigate={handleNavigate}>
+      <CurrentPage onNavigate={handleNavigate} recordId={navigation.recordId} returnPage={navigation.returnPage} />
+    </AppLayout>
   )
 }
 
