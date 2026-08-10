@@ -35,5 +35,8 @@
   ],
   "devDependencies": {
     "supabase": "^2.113.0"
+  },
+  "dependencies": {
+    "cloudflared": "^0.7.1"
   }
 }
