@@ -1,4 +1,5 @@
 import Icon from '../common/Icon'
+import PaletteSwitcher from './PaletteSwitcher'
 
 const navigation = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
@@ -37,6 +38,7 @@ function Sidebar({ activePage, isOpen, onClose, onNavigate }) {
             </button>
           ))}
         </nav>
+        <PaletteSwitcher />
         <div className="sidebar-user">
           <div className="user-avatar" aria-hidden="true">MB</div>
           <div className="user-details"><strong>Mariana Barros</strong><span>Contadora</span></div>

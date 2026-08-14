@@ -1,4 +1,5 @@
-:root {
+:root,
+:root[data-theme="ocean"] {
   --color-dark: #222831;
   --color-dark-secondary: #393e46;
   --color-primary: #00adb5;
@@ -20,7 +21,6 @@
   --bs-border-color: var(--color-border);
 }
 
-/* Aplique data-theme="sage" ao elemento <html> para usar esta paleta. */
 :root[data-theme="sage"] {
   --color-dark: #798777;
   --color-dark-secondary: #a2b29f;
@@ -34,4 +34,34 @@
   --color-text: #3f493d;
   --color-text-muted: #798777;
   --color-border: #bdd2b6;
+}
+
+:root[data-theme="plum"] {
+  --color-dark: #33283f;
+  --color-dark-secondary: #554363;
+  --color-primary: #8b5e9f;
+  --color-primary-dark: #704781;
+  --color-primary-rgb: 139, 94, 159;
+  --color-brand-background: #d9c1e2;
+  --color-brand-text: #33283f;
+  --color-background: #f5f0f7;
+  --color-surface: #fffaff;
+  --color-text: #33283f;
+  --color-text-muted: #776b7d;
+  --color-border: #ded2e3;
+}
+
+:root[data-theme="terracotta"] {
+  --color-dark: #4a3030;
+  --color-dark-secondary: #704848;
+  --color-primary: #b45f45;
+  --color-primary-dark: #93452f;
+  --color-primary-rgb: 180, 95, 69;
+  --color-brand-background: #edc9b9;
+  --color-brand-text: #4a3030;
+  --color-background: #fbf3ec;
+  --color-surface: #fffaf6;
+  --color-text: #412f2b;
+  --color-text-muted: #806d67;
+  --color-border: #ead6ca;
 }

@@ -10,6 +10,9 @@ const icons = {
   menu: <path d="M4 6h16M4 12h16M4 18h16" />,
   close: <path d="m6 6 12 12M18 6 6 18" />,
   arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
+  palette: <><circle cx="12" cy="12" r="9" /><circle cx="8" cy="9" r="1" /><circle cx="12" cy="7" r="1" /><circle cx="16" cy="10" r="1" /><path d="M15 17h.01M12 21a3 3 0 0 1 0-6h1.5a2.5 2.5 0 0 0 0-5H12" /></>,
+  chevron: <path d="m7 10 5 5 5-5" />,
+  check: <path d="m5 12 4 4L19 6" />,
 }
 
 function Icon({ name, size = 20, className = '' }) {
