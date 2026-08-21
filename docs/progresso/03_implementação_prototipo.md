@@ -243,6 +243,8 @@ Evidências disponíveis:
 
 Objetivo: retirar o acesso direto aos mocks das telas P0.
 
+**Estado atual:** parcialmente concluída. O cliente HTTP e as funções dos seis endpoints estão implementados e testados; a troca dos mocks pelos serviços nas telas será feita junto às Etapas 7 a 9.
+
 Estrutura sugerida:
 
 ```text
@@ -254,19 +256,29 @@ frontend/src/services/
 
 Passos:
 
-1. definir `VITE_API_URL` no exemplo de ambiente do frontend;
-2. criar um cliente HTTP central com tratamento de JSON e erros;
-3. implementar funções para os seis endpoints do P0;
-4. converter filtros em query string sem enviar valores vazios;
-5. normalizar a mensagem de erro retornada pela API;
-6. impedir que componentes importem diretamente `frontend/src/mocks` para o fluxo P0;
-7. manter os mocks somente como referência visual temporária até a integração terminar.
+1. [x] definir `VITE_API_URL` no exemplo de ambiente do frontend;
+2. [x] criar um cliente HTTP central com tratamento de JSON e erros;
+3. [x] implementar funções para os seis endpoints do P0;
+4. [x] converter filtros em query string sem enviar valores vazios;
+5. [x] normalizar a mensagem de erro retornada pela API;
+6. [ ] impedir que componentes importem diretamente `frontend/src/mocks` para o fluxo P0;
+7. [x] manter os mocks somente como referência visual temporária até a integração terminar.
 
 Validação da etapa:
 
-- cada função da camada de serviço chama a rota correta;
-- erro HTTP não é tratado como sucesso;
-- telas não precisam conhecer URL, headers ou formato bruto do erro.
+- [x] cada função da camada de serviço chama a rota correta;
+- [x] erro HTTP não é tratado como sucesso;
+- [x] a camada de serviço centraliza URL, headers e formato bruto do erro;
+- [ ] as telas do P0 consomem apenas a camada de serviço.
+
+Evidências:
+
+- `frontend/src/services/api.js` centraliza `VITE_API_URL`, JSON, falhas de rede e erros HTTP;
+- `empresasApi.js` e `lancamentosApi.js` expõem exatamente as seis operações do contrato;
+- filtros nulos, indefinidos e vazios não são enviados na query string;
+- 15 testes unitários da camada de serviços foram aprovados;
+- `npm run lint --workspace frontend` foi aprovado;
+- nenhum build do frontend foi executado.
 
 ### Etapa 7 — Ajustar a navegação e a listagem do frontend
 
@@ -485,4 +497,4 @@ O protótipo P0 estará pronto quando:
 
 ## 8. Próxima ação recomendada
 
-Avançar para a **Etapa 6**, criando a camada HTTP do frontend para consumir os seis endpoints do P0 sem acesso direto aos mocks.
+Avançar para a **Etapa 7**, conectando listagem e filtros aos serviços recém-criados. Essa integração removerá os mocks da primeira tela do fluxo P0 e começará a concluir a pendência restante da Etapa 6.
