@@ -14,7 +14,7 @@ O protótipo deve comprovar a imutabilidade dos dados de negócio e a navegaçã
 - a data de referência é operacional, sem regras de competência ou fechamento;
 - qualquer data válida pode ser informada, inclusive futura;
 - duplicidades não serão identificadas automaticamente;
-- empresas e categorias serão previamente inseridas no banco;
+- empresas, com nome e CNPJ, e categorias serão previamente inseridas no banco;
 - a listagem exibirá registros `ATIVO` e `SUBSTITUIDO`;
 - o P0 será usado somente para validar criação, consulta, substituição e histórico;
 - regras e arquitetura poderão ser revistas depois da validação com o cliente.
@@ -87,6 +87,8 @@ No P0, essa regra será garantida pelo backend, sem endpoints de edição ou exc
 
 Cada categoria pertence a uma empresa. Ao selecionar uma empresa, o formulário deve mostrar somente suas categorias.
 
+Cada empresa possui CNPJ obrigatório, único e com dígitos verificadores válidos. O banco e a API armazenam o CNPJ somente com os 14 dígitos, enquanto o frontend o apresenta no formato `00.000.000/0000-00`.
+
 O frontend melhora a experiência, mas a API também deve impedir o uso de uma categoria pertencente a outra empresa. A validação da API é suficiente para o P0.
 
 ### 6.3 Status
@@ -119,7 +121,7 @@ Se qualquer etapa falhar, nenhuma alteração parcial pode permanecer.
 
 Campos do formulário:
 
-- empresa — obrigatória;
+- empresa — obrigatória, identificada por nome e CNPJ;
 - categoria — obrigatória e pertencente à empresa;
 - data de referência — obrigatória e válida;
 - valor — obrigatório e maior que zero;
@@ -157,9 +159,9 @@ LANÇAMENTOS
 [ Empresa ▼ ] [ Categoria ▼ ] [ Data ] [ Status ▼ ] [ Buscar ]
 [ Limpar filtros ]                         [ + Novo lançamento ]
 
-Data       Empresa       Categoria       Valor       Status
-20/08/26   Empresa ABC   Serviços        5.500,00    ATIVO
-15/08/26   Empresa XYZ   Vendas          3.500,00    SUBSTITUIDO
+Data       Empresa                            Categoria  Valor       Status
+20/08/26   Empresa Exemplo Alfa — 99.999.999/0001-91  Vendas     5.500,00  ATIVO
+15/08/26   Empresa Exemplo Gama — 77.777.777/0001-91  Anexo III  3.500,00  SUBSTITUIDO
 ```
 
 Cada linha deve abrir a visualização do lançamento.
@@ -169,7 +171,7 @@ Cada linha deve abrir a visualização do lançamento.
 ```text
 NOVO LANÇAMENTO
 
-Empresa *              [ Empresa ABC ▼ ]
+Empresa *              [ Empresa Exemplo Alfa — 99.999.999/0001-91 ▼ ]
 Categoria *            [ Serviços ▼ ]
 Data de referência *   [ 20/08/2026 ]
 Valor *                [ R$ 5.000,00 ]
@@ -193,7 +195,7 @@ Quando o lançamento substituir outro, deve mostrar `Ver lançamento anterior`.
 ```text
 SUBSTITUIR LANÇAMENTO
 
-Empresa               Empresa ABC
+Empresa               Empresa Exemplo Alfa — 99.999.999/0001-91
 Categoria             [ Serviços ▼ ]
 Data                  [ 20/08/2026 ]
 Valor                 [ R$ 5.500,00 ]
@@ -248,13 +250,14 @@ Bloqueios explícitos, índices exclusivos e outros mecanismos avançados de con
 
 Os detalhes técnicos foram separados para evitar repetição neste documento:
 
-- [Modelo de banco do P0](Banco/modelo-banco.md): tabelas, campos, SQL, índices, dados iniciais e transação;
+- [Modelo de banco do P0](Banco/modelo-p0.md): tabelas, campos, SQL, índices, dados iniciais e transação;
 - [Modelo de endpoints do P0](Endpoints/modelo-endpoints-p0.md): rotas, filtros, payloads, respostas, validações e erros.
 
 ## 12. Testes obrigatórios
 
 - criar um lançamento válido e confirmar o status `ATIVO`;
 - rejeitar criação sem empresa, categoria, data ou valor;
+- confirmar que cada empresa possui CNPJ válido e único;
 - rejeitar categoria pertencente a outra empresa;
 - rejeitar valor igual ou menor que zero;
 - substituir um lançamento normalmente;

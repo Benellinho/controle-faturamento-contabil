@@ -67,7 +67,7 @@ Status utilizados:
 
 ## 5. `GET /api/empresas`
 
-Lista as empresas previamente cadastradas, ordenadas por nome.
+Lista as empresas previamente cadastradas, com CNPJ, ordenadas por nome. O CNPJ é retornado com 14 dígitos; a máscara de apresentação é responsabilidade do frontend.
 
 ### Resposta `200`
 
@@ -75,11 +75,13 @@ Lista as empresas previamente cadastradas, ordenadas por nome.
 [
   {
     "id": 1,
-    "nome": "Empresa ABC"
+    "nome": "EMPRESA EXEMPLO ALFA LTDA",
+    "cnpj": "99999999000191"
   },
   {
     "id": 2,
-    "nome": "Empresa XYZ"
+    "nome": "EMPRESA EXEMPLO BETA LTDA",
+    "cnpj": "88888888000191"
   }
 ]
 ```
@@ -139,7 +141,8 @@ GET /api/lancamentos?empresa_id=1&status=ATIVO
     "data_referencia": "2026-08-20",
     "empresa": {
       "id": 1,
-      "nome": "Empresa ABC"
+      "nome": "EMPRESA EXEMPLO ALFA LTDA",
+      "cnpj": "99999999000191"
     },
     "categoria": {
       "id": 2,
@@ -167,7 +170,8 @@ Retorna os detalhes e os identificadores necessários para navegar no histórico
   "id": 16,
   "empresa": {
     "id": 1,
-    "nome": "Empresa ABC"
+    "nome": "EMPRESA EXEMPLO ALFA LTDA",
+    "cnpj": "99999999000191"
   },
   "categoria": {
     "id": 2,
@@ -327,6 +331,7 @@ Também ficam fora do P0 paginação, ordenação configurável, busca textual, 
 ## 12. Checklist mínimo da API
 
 - [ ] Listar empresas.
+- [ ] Retornar nome e CNPJ em todas as representações de empresa.
 - [ ] Listar categorias por empresa.
 - [ ] Listar lançamentos com os quatro filtros.
 - [ ] Consultar um lançamento e seus vizinhos no histórico.

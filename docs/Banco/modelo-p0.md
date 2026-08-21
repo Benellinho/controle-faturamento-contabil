@@ -36,6 +36,7 @@ Uma empresa possui várias categorias e vários lançamentos. Uma categoria pert
 |---|---|---|
 | `id` | `BIGSERIAL` | Chave primária |
 | `nome` | `VARCHAR(150)` | Obrigatório |
+| `cnpj` | `CHAR(14)` | Obrigatório, único e armazenado somente com dígitos |
 
 ### 3.2 `categorias`
 
@@ -66,7 +67,10 @@ Uma empresa possui várias categorias e vários lançamentos. Uma categoria pert
 ```sql
 CREATE TABLE empresas (
     id BIGSERIAL PRIMARY KEY,
-    nome VARCHAR(150) NOT NULL
+    nome VARCHAR(150) NOT NULL,
+    cnpj CHAR(14) NOT NULL UNIQUE,
+    CONSTRAINT empresas_cnpj_formato_check
+        CHECK (cnpj ~ '^[0-9]{14}$')
 );
 
 CREATE TABLE categorias (
@@ -114,19 +118,19 @@ CREATE INDEX idx_lancamentos_substitui_id
 Os dados reais da demonstração devem substituir os exemplos abaixo.
 
 ```sql
-INSERT INTO empresas (nome)
+INSERT INTO empresas (nome, cnpj)
 VALUES
-    ('Empresa Exemplo LTDA'),
-    ('Comércio ABC LTDA'),
-    ('Indústria XYZ LTDA');
+    ('EMPRESA EXEMPLO ALFA LTDA', '99999999000191'),
+    ('EMPRESA EXEMPLO BETA LTDA', '88888888000191'),
+    ('EMPRESA EXEMPLO GAMA LTDA', '77777777000191');
 
 INSERT INTO categorias (empresa_id, nome)
 VALUES
     (1, 'Vendas'),
-    (1, 'Serviços'),
     (2, 'Vendas'),
-    (3, 'Produtos'),
-    (3, 'Serviços');
+    (3, 'Vendas'),
+    (3, 'Anexo III'),
+    (3, 'Anexo IV');
 ```
 
 ## 6. Regras mantidas pela API no P0
@@ -134,6 +138,8 @@ VALUES
 Para evitar complexidade desnecessária, as seguintes regras serão validadas pelo backend:
 
 - a categoria informada deve existir e pertencer à empresa selecionada;
+- o CNPJ deve conter exatamente 14 dígitos e não pode se repetir entre empresas;
+- o processo controlado de pré-cadastro deve validar os dígitos verificadores antes da inserção;
 - um lançamento comum sempre nasce como `ATIVO`;
 - campos de controle de substituição não são aceitos na criação comum;
 - um lançamento existente não pode ter seus dados de negócio editados ou ser excluído;
@@ -214,6 +220,7 @@ SELECT
     l.data_referencia,
     e.id AS empresa_id,
     e.nome AS empresa_nome,
+    e.cnpj AS empresa_cnpj,
     c.id AS categoria_id,
     c.nome AS categoria_nome,
     l.valor,
