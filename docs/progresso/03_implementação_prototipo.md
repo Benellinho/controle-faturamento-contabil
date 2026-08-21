@@ -120,6 +120,8 @@ Validação da etapa:
 
 Objetivo: disponibilizar as consultas necessárias antes das operações de escrita.
 
+**Estado atual:** concluída. Os quatro endpoints de leitura estão implementados, cobertos por testes isolados e validados contra o Supabase remoto.
+
 Arquivos principais:
 
 ```text
@@ -131,24 +133,32 @@ backend/src/server.js
 
 Passos:
 
-1. implementar `GET /api/empresas`, retornando nome e CNPJ e ordenando por nome;
-2. implementar `GET /api/empresas/:empresaId/categorias`;
-3. retornar `404` quando a empresa não existir;
-4. implementar `GET /api/lancamentos` com filtros opcionais de empresa, categoria, data e status;
-5. ordenar a listagem por data e ID decrescentes;
-6. implementar `GET /api/lancamentos/:id`;
-7. consultar no detalhe o lançamento anterior e o substituto direto;
-8. separar responsabilidade entre rota, schema, controller, service e repository;
-9. registrar todas as rotas P0 em `backend/src/server.js` com prefixo `/api`;
-10. padronizar os erros no formato `{ erro: { codigo, mensagem } }`.
+1. [x] implementar `GET /api/empresas`, retornando nome e CNPJ e ordenando por nome;
+2. [x] implementar `GET /api/empresas/:empresaId/categorias`;
+3. [x] retornar `404` quando a empresa não existir;
+4. [x] implementar `GET /api/lancamentos` com filtros opcionais de empresa, categoria, data e status;
+5. [x] ordenar a listagem por data e ID decrescentes;
+6. [x] implementar `GET /api/lancamentos/:id`;
+7. [x] consultar no detalhe o lançamento anterior e o substituto direto;
+8. [x] separar responsabilidade entre rota, schema, controller, service e repository;
+9. [x] registrar as rotas com prefixo `/api`;
+10. [x] padronizar os erros no formato `{ erro: { codigo, mensagem } }`.
 
 Validação da etapa:
 
-- todas as quatro consultas respondem conforme o contrato;
-- filtros isolados e combinados retornam o resultado esperado;
-- consulta sem resultado retorna lista vazia;
-- ID inexistente retorna `404`;
-- parâmetros inválidos retornam `400`.
+- [x] todas as quatro consultas respondem conforme o contrato;
+- [x] filtros isolados e combinados retornam o resultado esperado;
+- [x] consulta sem resultado retorna lista vazia;
+- [x] ID inexistente retorna `404`;
+- [x] parâmetros inválidos retornam `400`.
+
+Evidências:
+
+- 19 testes isolados aprovados para services e endpoints de empresas, categorias e lançamentos;
+- consulta remota de lançamentos sem filtros retornou `200` com lista vazia;
+- consulta remota com os quatro filtros combinados retornou `200` com lista vazia;
+- consulta remota de lançamento inexistente retornou `404`;
+- 6 testes remotos de conexão, estrutura e dados iniciais permaneceram aprovados.
 
 ### Etapa 4 — Implementar a criação de lançamento
 
@@ -451,4 +461,4 @@ O protótipo P0 estará pronto quando:
 
 ## 8. Próxima ação recomendada
 
-Começar pela **Etapa 1** e pela **Etapa 2**, confirmando o contrato e tornando o banco local reproduzível. Em seguida, implementar primeiro as consultas do backend. Essa ordem permite integrar e validar o frontend em incrementos pequenos, sem depender de mocks durante o fechamento do P0.
+Avançar para a **Etapa 4**, implementando a criação de lançamentos com validação de empresa, categoria, data e valor. A escrita deve manter o novo registro como `ATIVO` e impedir o envio de campos reservados pelo cliente.

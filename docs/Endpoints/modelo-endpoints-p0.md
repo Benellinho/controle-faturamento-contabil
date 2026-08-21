@@ -330,11 +330,11 @@ Também ficam fora do P0 paginação, ordenação configurável, busca textual, 
 
 ## 12. Checklist mínimo da API
 
-- [ ] Listar empresas.
-- [ ] Retornar nome e CNPJ em todas as representações de empresa.
-- [ ] Listar categorias por empresa.
-- [ ] Listar lançamentos com os quatro filtros.
-- [ ] Consultar um lançamento e seus vizinhos no histórico.
+- [x] Listar empresas.
+- [x] Retornar nome e CNPJ em todas as representações de empresa.
+- [x] Listar categorias por empresa.
+- [x] Listar lançamentos com os quatro filtros.
+- [x] Consultar um lançamento e seus vizinhos no histórico.
 - [ ] Criar um lançamento válido como `ATIVO`.
 - [ ] Rejeitar categoria de outra empresa.
 - [ ] Rejeitar valor igual ou menor que zero.
