@@ -280,6 +280,9 @@ Evidências:
 - o ESLint proíbe imports de `mocks` nas páginas de faturamentos;
 - um teste estrutural percorre recursivamente os componentes de faturamentos e impede a reintrodução de imports de `mocks`;
 - 21 testes da suíte `test:p0:services` foram aprovados no total após a Etapa 7;
+- o backend aceita uma lista explícita de origens CORS em `FRONTEND_URL`, separada por vírgulas, para atender Vercel e desenvolvimento local sem liberar wildcard;
+- 6 testes de configuração e preflight confirmam localhost e Vercel permitidos e uma origem externa bloqueada;
+- a suíte dos módulos do backend totaliza 65 testes aprovados após a validação do CORS;
 - `npm run lint --workspace frontend` foi aprovado;
 - nenhum build do frontend foi executado.
 
