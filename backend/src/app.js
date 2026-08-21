@@ -56,7 +56,7 @@ export async function buildApp(options = {}) {
   const services = options.services ?? defaultServices()
 
   await app.register(cors, {
-    origin: env.frontendUrl,
+    origin: options.corsOrigins ?? env.frontendOrigins,
     methods: ['GET', 'POST', 'OPTIONS'],
   })
 
