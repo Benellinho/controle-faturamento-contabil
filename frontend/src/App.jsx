@@ -63,7 +63,7 @@ function App() {
 
   return (
     <AppLayout currentPage={activeSidebarPage} onNavigate={handleNavigate}>
-      <CurrentPage onNavigate={handleNavigate} recordId={navigation.recordId} returnPage={navigation.returnPage} />
+      <CurrentPage key={`${navigation.page}-${navigation.recordId ?? 'novo'}`} onNavigate={handleNavigate} recordId={navigation.recordId} returnPage={navigation.returnPage} />
     </AppLayout>
   )
 }

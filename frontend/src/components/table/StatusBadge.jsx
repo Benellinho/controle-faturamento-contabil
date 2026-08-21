@@ -4,6 +4,7 @@ const statusConfig = {
   INATIVO: { label: 'Inativo', className: 'status-inactive' },
   INATIVA: { label: 'Inativa', className: 'status-inactive' },
   CANCELADO: { label: 'Cancelado', className: 'status-cancelled' },
+  SUBSTITUIDO: { label: 'Substituído', className: 'status-cancelled' },
 }
 
 function StatusBadge({ status }) {

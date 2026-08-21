@@ -18,4 +18,15 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    files: ['src/pages/Faturamentos/**/*.{js,jsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: ['**/mocks', '**/mocks/**'],
+          message: 'O fluxo P0 deve acessar dados somente pela camada de services.',
+        }],
+      }],
+    },
+  },
 ])
