@@ -76,6 +76,21 @@ const lancamentoCreationResponseSchema = {
   },
 }
 
+const lancamentoReplacementResponseSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: [
+    'mensagem',
+    'lancamento_original_id',
+    'novo_lancamento_id',
+  ],
+  properties: {
+    mensagem: { type: 'string' },
+    lancamento_original_id: safeIdSchema,
+    novo_lancamento_id: safeIdSchema,
+  },
+}
+
 const lancamentoDetailSchema = {
   type: 'object',
   additionalProperties: false,
@@ -147,5 +162,36 @@ export const criarLancamentoSchema = {
   },
   response: {
     201: lancamentoCreationResponseSchema,
+  },
+}
+
+export const substituirLancamentoSchema = {
+  params: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['id'],
+    properties: {
+      id: safeIdSchema,
+    },
+  },
+  body: {
+    type: 'object',
+    additionalProperties: false,
+    required: [
+      'categoria_id',
+      'data_referencia',
+      'valor',
+      'motivo_substituicao',
+    ],
+    properties: {
+      categoria_id: safeIdSchema,
+      data_referencia: { type: 'string', format: 'date' },
+      valor: monetaryValueSchema,
+      observacao: nullableStringSchema,
+      motivo_substituicao: { type: 'string', minLength: 1 },
+    },
+  },
+  response: {
+    201: lancamentoReplacementResponseSchema,
   },
 }

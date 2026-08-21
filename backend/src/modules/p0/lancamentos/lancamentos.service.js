@@ -6,6 +6,23 @@ export function createLancamentosService({
   categoriasRepository,
 }) {
   return {
+    async substituir(id, payload) {
+      const motivo = payload.motivo_substituicao.trim()
+
+      if (!motivo) {
+        throw new AppError(
+          400,
+          'MOTIVO_SUBSTITUICAO_INVALIDO',
+          'O motivo da substituicao deve ser informado.',
+        )
+      }
+
+      return lancamentosRepository.replace(id, {
+        ...payload,
+        motivo_substituicao: motivo,
+      })
+    },
+
     async criar(payload) {
       const empresaExiste = await empresasRepository.existsById(payload.empresa_id)
 

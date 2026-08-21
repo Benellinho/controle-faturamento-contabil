@@ -2,6 +2,7 @@ import {
   criarLancamentoSchema,
   listarLancamentosSchema,
   obterLancamentoSchema,
+  substituirLancamentoSchema,
 } from './lancamentos.schema.js'
 
 export async function lancamentosRoutes(app, options) {
@@ -13,6 +14,11 @@ export async function lancamentosRoutes(app, options) {
   app.get('/', {
     schema: listarLancamentosSchema,
     handler: options.controller.listar,
+  })
+
+  app.post('/:id/substituir', {
+    schema: substituirLancamentoSchema,
+    handler: options.controller.substituir,
   })
 
   app.get('/:id', {

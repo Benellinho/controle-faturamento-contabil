@@ -1,5 +1,13 @@
 export function createLancamentosController(lancamentosService) {
   return {
+    async substituir(request, reply) {
+      const resultado = await lancamentosService.substituir(
+        request.params.id,
+        { ...request.body },
+      )
+      return reply.status(201).send(resultado)
+    },
+
     async criar(request, reply) {
       const lancamento = await lancamentosService.criar({ ...request.body })
       return reply.status(201).send(lancamento)

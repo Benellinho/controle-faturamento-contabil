@@ -1,4 +1,4 @@
-import { databaseQueryError } from '../../../lib/errors.js'
+import { AppError, databaseQueryError } from '../../../lib/errors.js'
 
 const listColumns = `
   id,
@@ -63,8 +63,65 @@ function normalizeCreated(row) {
   }
 }
 
+function replacementError(error) {
+  const errors = {
+    LANCAMENTO_NAO_ENCONTRADO: new AppError(
+      404,
+      'LANCAMENTO_NAO_ENCONTRADO',
+      'O lancamento informado nao foi encontrado.',
+    ),
+    LANCAMENTO_NAO_ATIVO: new AppError(
+      409,
+      'LANCAMENTO_NAO_ATIVO',
+      'Somente um lancamento ativo pode ser substituido.',
+    ),
+    CATEGORIA_NAO_PERTENCE_EMPRESA: new AppError(
+      400,
+      'CATEGORIA_NAO_PERTENCE_EMPRESA',
+      'A categoria informada nao pertence a empresa do lancamento.',
+    ),
+    MOTIVO_SUBSTITUICAO_INVALIDO: new AppError(
+      400,
+      'MOTIVO_SUBSTITUICAO_INVALIDO',
+      'O motivo da substituicao deve ser informado.',
+    ),
+    PARAMETROS_INVALIDOS: new AppError(
+      400,
+      'PARAMETROS_INVALIDOS',
+      'Os parametros informados sao invalidos.',
+    ),
+  }
+
+  return errors[error?.message]
+    ?? databaseQueryError('substituir o lancamento', error)
+}
+
 export function createLancamentosRepository(client) {
   return {
+    async replace(id, payload) {
+      if (!client) throw databaseQueryError('substituir o lancamento')
+
+      const { data, error } = await client.rpc('substituir_lancamento_p0', {
+        p_lancamento_original_id: id,
+        p_categoria_id: payload.categoria_id,
+        p_data_referencia: payload.data_referencia,
+        p_valor: payload.valor,
+        p_observacao: payload.observacao ?? null,
+        p_motivo_substituicao: payload.motivo_substituicao,
+      })
+
+      if (error) throw replacementError(error)
+
+      const result = Array.isArray(data) ? data[0] : data
+      if (!result) throw databaseQueryError('substituir o lancamento')
+
+      return {
+        mensagem: 'Lançamento substituído com sucesso.',
+        lancamento_original_id: result.lancamento_original_id,
+        novo_lancamento_id: result.novo_lancamento_id,
+      }
+    },
+
     async create(payload) {
       if (!client) throw databaseQueryError('criar o lancamento')
 
