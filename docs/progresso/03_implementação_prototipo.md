@@ -243,7 +243,7 @@ Evidências disponíveis:
 
 Objetivo: retirar o acesso direto aos mocks das telas P0.
 
-**Estado atual:** parcialmente concluída. O cliente HTTP e as funções dos seis endpoints estão implementados e testados; a troca dos mocks pelos serviços nas telas será feita junto às Etapas 7 a 9.
+**Estado atual:** concluída. O cliente HTTP, as funções dos seis endpoints e as telas de listagem, criação e detalhe usam exclusivamente a camada de serviços no fluxo P0.
 
 Estrutura sugerida:
 
@@ -261,7 +261,7 @@ Passos:
 3. [x] implementar funções para os seis endpoints do P0;
 4. [x] converter filtros em query string sem enviar valores vazios;
 5. [x] normalizar a mensagem de erro retornada pela API;
-6. [ ] impedir que componentes importem diretamente `frontend/src/mocks` para o fluxo P0;
+6. [x] impedir que componentes importem diretamente `frontend/src/mocks` para o fluxo P0;
 7. [x] manter os mocks somente como referência visual temporária até a integração terminar.
 
 Validação da etapa:
@@ -269,7 +269,7 @@ Validação da etapa:
 - [x] cada função da camada de serviço chama a rota correta;
 - [x] erro HTTP não é tratado como sucesso;
 - [x] a camada de serviço centraliza URL, headers e formato bruto do erro;
-- [ ] as telas do P0 consomem apenas a camada de serviço.
+- [x] as telas do P0 consomem apenas a camada de serviço.
 
 Evidências:
 
@@ -277,6 +277,9 @@ Evidências:
 - `empresasApi.js` e `lancamentosApi.js` expõem exatamente as seis operações do contrato;
 - filtros nulos, indefinidos e vazios não são enviados na query string;
 - 15 testes unitários da camada de serviços foram aprovados;
+- o ESLint proíbe imports de `mocks` nas páginas de faturamentos;
+- um teste estrutural percorre recursivamente os componentes de faturamentos e impede a reintrodução de imports de `mocks`;
+- 16 testes da suíte `test:p0:services` foram aprovados no total;
 - `npm run lint --workspace frontend` foi aprovado;
 - nenhum build do frontend foi executado.
 
@@ -497,4 +500,4 @@ O protótipo P0 estará pronto quando:
 
 ## 8. Próxima ação recomendada
 
-Avançar para a **Etapa 7**, conectando listagem e filtros aos serviços recém-criados. Essa integração removerá os mocks da primeira tela do fluxo P0 e começará a concluir a pendência restante da Etapa 6.
+Avançar para a parte restante da **Etapa 9**, implementando a tela e a ação de substituição. Listagem, filtros, criação e detalhe já consomem a API, e um teste estrutural protege o fluxo P0 contra imports diretos de `frontend/src/mocks`.
