@@ -4,6 +4,27 @@ import { test } from 'node:test'
 import { buildApp } from '../../../src/app.js'
 import { getConfiguredSupabase } from './helpers.js'
 
+const publishedApiUrl = process.env.P0_API_URL?.replace(/\/+$/, '')
+
+async function request(app, options) {
+  if (app) return app.inject(options)
+
+  const response = await fetch(`${publishedApiUrl}${options.url}`, {
+    method: options.method,
+    headers: options.payload ? { 'content-type': 'application/json' } : undefined,
+    body: options.payload ? JSON.stringify(options.payload) : undefined,
+  })
+  const body = await response.text()
+
+  return {
+    statusCode: response.status,
+    body,
+    json() {
+      return JSON.parse(body)
+    },
+  }
+}
+
 async function loadCategories(client) {
   const { data, error } = await client
     .from('categorias')
@@ -68,7 +89,7 @@ test('fluxo remoto cria, substitui, preserva historico e limpa os dados', {
   timeout: 60_000,
 }, async () => {
   const client = getConfiguredSupabase()
-  const app = await buildApp({ logger: false })
+  const app = publishedApiUrl ? null : await buildApp({ logger: false })
   const marker = `TESTE-P0-${randomUUID()}`
   const observations = [
     `${marker}-original`,
@@ -81,7 +102,7 @@ test('fluxo remoto cria, substitui, preserva historico e limpa os dados', {
   try {
     const { primary, anotherCompany } = await loadCategories(client)
 
-    const creationResponse = await app.inject({
+    const creationResponse = await request(app, {
       method: 'POST',
       url: '/api/lancamentos',
       payload: {
@@ -95,7 +116,7 @@ test('fluxo remoto cria, substitui, preserva historico e limpa os dados', {
     assert.equal(creationResponse.statusCode, 201, creationResponse.body)
     const original = creationResponse.json()
 
-    const rollbackResponse = await app.inject({
+    const rollbackResponse = await request(app, {
       method: 'POST',
       url: `/api/lancamentos/${original.id}/substituir`,
       payload: {
@@ -117,7 +138,7 @@ test('fluxo remoto cria, substitui, preserva historico e limpa os dados', {
       'Uma substituicao rejeitada criou registro parcial.',
     )
 
-    const firstReplacementResponse = await app.inject({
+    const firstReplacementResponse = await request(app, {
       method: 'POST',
       url: `/api/lancamentos/${original.id}/substituir`,
       payload: {
@@ -132,7 +153,7 @@ test('fluxo remoto cria, substitui, preserva historico e limpa os dados', {
     const firstReplacement = firstReplacementResponse.json()
     assert.equal(firstReplacement.lancamento_original_id, original.id)
 
-    const conflictResponse = await app.inject({
+    const conflictResponse = await request(app, {
       method: 'POST',
       url: `/api/lancamentos/${original.id}/substituir`,
       payload: {
@@ -151,7 +172,7 @@ test('fluxo remoto cria, substitui, preserva historico e limpa os dados', {
       'A tentativa conflitante criou um lancamento adicional.',
     )
 
-    const secondReplacementResponse = await app.inject({
+    const secondReplacementResponse = await request(app, {
       method: 'POST',
       url: `/api/lancamentos/${firstReplacement.novo_lancamento_id}/substituir`,
       payload: {
@@ -165,15 +186,15 @@ test('fluxo remoto cria, substitui, preserva historico e limpa os dados', {
     assert.equal(secondReplacementResponse.statusCode, 201, secondReplacementResponse.body)
     const secondReplacement = secondReplacementResponse.json()
 
-    const originalDetailResponse = await app.inject({
+    const originalDetailResponse = await request(app, {
       method: 'GET',
       url: `/api/lancamentos/${original.id}`,
     })
-    const middleDetailResponse = await app.inject({
+    const middleDetailResponse = await request(app, {
       method: 'GET',
       url: `/api/lancamentos/${firstReplacement.novo_lancamento_id}`,
     })
-    const currentDetailResponse = await app.inject({
+    const currentDetailResponse = await request(app, {
       method: 'GET',
       url: `/api/lancamentos/${secondReplacement.novo_lancamento_id}`,
     })
@@ -222,7 +243,7 @@ test('fluxo remoto cria, substitui, preserva historico e limpa os dados', {
     )
     assert.equal((await findTestRows(client, observations)).length, 3)
   } finally {
-    await app.close()
+    if (app) await app.close()
     await removeTestRows(client, observations)
   }
 })
