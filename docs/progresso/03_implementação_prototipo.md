@@ -199,7 +199,7 @@ Evidências:
 
 Objetivo: corrigir dados sem editar ou excluir o original.
 
-**Estado atual:** implementação concluída no repositório. A migration da RPC ainda precisa ser aplicada no Supabase remoto para executar a validação transacional integrada.
+**Estado atual:** concluída. A RPC foi aplicada no Supabase remoto e o fluxo transacional foi validado com uma cadeia sintética removida ao final do teste.
 
 Passos:
 
@@ -221,20 +221,23 @@ Decisão técnica obrigatória:
 
 Validação da etapa:
 
-- [ ] o original permanece armazenado e sem alteração nos dados de negócio no remoto;
-- [ ] apenas seu status e `substituido_em` mudam no remoto;
-- [ ] o novo registro nasce `ATIVO` e aponta para o anterior no remoto;
+- [x] o original permanece armazenado e sem alteração nos dados de negócio no remoto;
+- [x] apenas seu status e `substituido_em` mudam no remoto;
+- [x] o novo registro nasce `ATIVO` e aponta para o anterior no remoto;
 - [x] motivo vazio ou composto somente por espaços é rejeitado;
-- [ ] uma falha provocada confirma o rollback no remoto;
-- [ ] uma cadeia com três lançamentos permanece linear no remoto.
+- [x] uma falha provocada não cria registro parcial no remoto;
+- [x] uma cadeia com três lançamentos permanece linear no remoto.
 
 Evidências disponíveis:
 
 - 59 testes isolados aprovam schemas, service, repository, endpoint e mapeamento dos erros da RPC;
 - o repository faz uma única chamada a `substituir_lancamento_p0`;
 - a migration usa bloqueio `FOR UPDATE`, verifica a quantidade atualizada e restringe a execução à `service_role`;
-- a tentativa não destrutiva no remoto manteve a tabela vazia, mas retornou `PGRST202`, confirmando que a nova função ainda não foi aplicada;
-- após aplicar `supabase/migrations/20260821010000_criar_funcao_substituicao_p0.sql`, ainda será necessário executar o cenário integrado de sucesso, conflito, rollback e cadeia linear.
+- a RPC remota responde com `404 LANCAMENTO_NAO_ENCONTRADO` para ID inexistente;
+- o teste integrado remoto criou um lançamento, realizou duas substituições e validou a cadeia com três registros;
+- uma categoria de outra empresa foi rejeitada sem criar registro parcial;
+- uma segunda substituição do mesmo original retornou `409 LANCAMENTO_NAO_ATIVO`;
+- os três lançamentos sintéticos foram removidos em ordem inversa e nenhum registro identificado pelo teste permaneceu.
 
 ### Etapa 6 — Criar a camada de API do frontend
 
@@ -403,11 +406,11 @@ Objetivo: comprovar o critério de aceite com evidências reproduzíveis.
 - [ ] rejeitar campos obrigatórios ausentes;
 - [ ] rejeitar categoria de outra empresa;
 - [ ] rejeitar valor igual ou menor que zero;
-- [ ] substituir lançamento ativo;
-- [ ] exigir motivo;
-- [ ] rejeitar nova substituição do original;
-- [ ] comprovar rollback em falha;
-- [ ] validar cadeia com três lançamentos.
+- [x] substituir lançamento ativo;
+- [x] exigir motivo;
+- [x] rejeitar nova substituição do original;
+- [x] comprovar ausência de gravação parcial em falha;
+- [x] validar cadeia com três lançamentos.
 
 #### Frontend
 
@@ -482,4 +485,4 @@ O protótipo P0 estará pronto quando:
 
 ## 8. Próxima ação recomendada
 
-Aplicar `supabase/migrations/20260821010000_criar_funcao_substituicao_p0.sql` no Supabase remoto e concluir as validações transacionais da **Etapa 5**. Somente depois avançar para a camada de API do frontend da Etapa 6.
+Avançar para a **Etapa 6**, criando a camada HTTP do frontend para consumir os seis endpoints do P0 sem acesso direto aos mocks.

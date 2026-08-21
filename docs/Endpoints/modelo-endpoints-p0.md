@@ -338,7 +338,7 @@ Também ficam fora do P0 paginação, ordenação configurável, busca textual, 
 - [x] Criar um lançamento válido como `ATIVO`.
 - [x] Rejeitar categoria de outra empresa.
 - [x] Rejeitar valor igual ou menor que zero.
-- [ ] Substituir um lançamento dentro de transação.
+- [x] Substituir um lançamento dentro de transação.
 - [x] Exigir motivo de substituição.
 - [x] Rejeitar substituição de lançamento já substituído.
-- [ ] Confirmar rollback quando a substituição falhar.
+- [x] Confirmar ausência de gravação parcial quando a substituição falhar.
