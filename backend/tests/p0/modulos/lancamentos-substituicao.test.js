@@ -7,8 +7,9 @@ import { createLancamentosService } from '../../../src/modules/p0/lancamentos/la
 
 const validPayload = {
   categoria_id: 2,
-  data_referencia: '2026-08-20',
+  data_referencia: '2026-08-01',
   valor: 5500.55,
+  percentual_imposto: 7.25,
   observacao: 'Lancamento corrigido.',
   motivo_substituicao: 'Valor informado incorretamente.',
 }
@@ -110,8 +111,9 @@ describe('repository de substituicao de lancamentos', () => {
     assert.deepEqual(rpcParameters, {
       p_lancamento_original_id: 15,
       p_categoria_id: 2,
-      p_data_referencia: '2026-08-20',
+      p_data_referencia: '2026-08-01',
       p_valor: 5500.55,
+      p_percentual_imposto: 7.25,
       p_observacao: 'Lancamento corrigido.',
       p_motivo_substituicao: 'Valor informado incorretamente.',
     })
@@ -214,8 +216,12 @@ describe('endpoint de substituicao de lancamentos', () => {
     ['ID invalido', '/api/lancamentos/0/substituir', validPayload],
     ['categoria ausente', '/api/lancamentos/15/substituir', { ...validPayload, categoria_id: undefined }],
     ['data invalida', '/api/lancamentos/15/substituir', { ...validPayload, data_referencia: '2026-02-30' }],
+    ['data fora do primeiro dia', '/api/lancamentos/15/substituir', { ...validPayload, data_referencia: '2026-08-20' }],
     ['valor zero', '/api/lancamentos/15/substituir', { ...validPayload, valor: 0 }],
     ['valor com mais de duas casas', '/api/lancamentos/15/substituir', { ...validPayload, valor: 10.123 }],
+    ['percentual ausente', '/api/lancamentos/15/substituir', { ...validPayload, percentual_imposto: undefined }],
+    ['percentual acima de cem', '/api/lancamentos/15/substituir', { ...validPayload, percentual_imposto: 100.01 }],
+    ['percentual com mais de duas casas', '/api/lancamentos/15/substituir', { ...validPayload, percentual_imposto: 7.123 }],
     ['motivo ausente', '/api/lancamentos/15/substituir', { ...validPayload, motivo_substituicao: undefined }],
     ['empresa reservada', '/api/lancamentos/15/substituir', { ...validPayload, empresa_id: 3 }],
     ['status reservado', '/api/lancamentos/15/substituir', { ...validPayload, status: 'ATIVO' }],

@@ -35,7 +35,11 @@ Os testes são somente leitura. Eles não criam, alteram nem removem registros, 
 
 ## Dados de demonstração
 
-O arquivo `inserir-dados-p0.js` contém somente empresas fictícias, CNPJs sintéticos e categorias para desenvolvimento. Dados reais de clientes não devem ser adicionados ao arquivo ou versionados. Lançamentos não são pré-cadastrados; eles serão criados pelo fluxo da aplicação e por seus testes específicos.
+O `supabase/seed.sql` e o arquivo `inserir-dados-p0.js` contêm somente empresas fictícias, CNPJs sintéticos e categorias para desenvolvimento. Dados reais de clientes não devem ser adicionados ou versionados. Lançamentos não são pré-cadastrados; eles serão criados pelo fluxo da aplicação e por seus testes específicos.
+
+Depois de iniciar o Supabase local, `npx supabase db reset` recria o banco e aplica automaticamente o `supabase/seed.sql`.
+
+O teste `backend/tests/p0/local/fluxo-api-local.test.js` cobre a API real contra o Supabase local. Ele recusa execução contra host remoto, cria um lançamento temporário e o remove ao final.
 
 Sem confirmação, o script apenas imprime o plano e não acessa o banco:
 

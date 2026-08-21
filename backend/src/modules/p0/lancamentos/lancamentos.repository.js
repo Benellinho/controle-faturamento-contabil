@@ -4,6 +4,7 @@ const listColumns = `
   id,
   data_referencia,
   valor,
+  percentual_imposto,
   status,
   criado_em,
   empresa:empresas!lancamentos_empresa_id_fkey(id,nome,cnpj),
@@ -24,6 +25,7 @@ const creationColumns = `
   categoria_id,
   data_referencia,
   valor,
+  percentual_imposto,
   observacao,
   status,
   substitui_lancamento_id,
@@ -39,6 +41,7 @@ function normalizeListItem(row) {
     empresa: row.empresa,
     categoria: row.categoria,
     valor: Number(row.valor),
+    percentual_imposto: Number(row.percentual_imposto),
     status: row.status,
     criado_em: row.criado_em,
   }
@@ -60,7 +63,19 @@ function normalizeCreated(row) {
   return {
     ...row,
     valor: Number(row.valor),
+    percentual_imposto: Number(row.percentual_imposto),
   }
+}
+
+function batchCreationError(error) {
+  const errors = {
+    EMPRESA_NAO_ENCONTRADA: new AppError(404, 'EMPRESA_NAO_ENCONTRADA', 'A empresa informada nao foi encontrada.'),
+    CATEGORIAS_INCOMPLETAS: new AppError(400, 'CATEGORIAS_INCOMPLETAS', 'Informe todas as categorias da empresa exatamente uma vez.'),
+    CATEGORIAS_DUPLICADAS: new AppError(400, 'CATEGORIAS_DUPLICADAS', 'Uma categoria nao pode aparecer mais de uma vez no lote.'),
+    PARAMETROS_INVALIDOS: new AppError(400, 'PARAMETROS_INVALIDOS', 'Os parametros informados sao invalidos.'),
+  }
+
+  return errors[error?.message] ?? databaseQueryError('criar os lancamentos em lote', error)
 }
 
 function replacementError(error) {
@@ -106,6 +121,7 @@ export function createLancamentosRepository(client) {
         p_categoria_id: payload.categoria_id,
         p_data_referencia: payload.data_referencia,
         p_valor: payload.valor,
+        p_percentual_imposto: payload.percentual_imposto,
         p_observacao: payload.observacao ?? null,
         p_motivo_substituicao: payload.motivo_substituicao,
       })
@@ -130,6 +146,7 @@ export function createLancamentosRepository(client) {
         categoria_id: payload.categoria_id,
         data_referencia: payload.data_referencia,
         valor: payload.valor,
+        percentual_imposto: payload.percentual_imposto,
         observacao: payload.observacao ?? null,
         status: 'ATIVO',
         substitui_lancamento_id: null,
@@ -145,6 +162,34 @@ export function createLancamentosRepository(client) {
 
       if (error) throw databaseQueryError('criar o lancamento', error)
       return normalizeCreated(data)
+    },
+
+    async createBatch(payload) {
+      if (!client) throw databaseQueryError('criar os lancamentos em lote')
+
+      const { data, error } = await client.rpc('criar_lancamentos_lote_p0', {
+        p_empresa_id: payload.empresa_id,
+        p_data_referencia: payload.data_referencia,
+        p_itens: payload.itens.map((item) => ({
+          categoria_id: item.categoria_id,
+          valor: item.valor,
+          percentual_imposto: item.percentual_imposto,
+          observacao: item.observacao ?? null,
+        })),
+      })
+
+      if (error) throw batchCreationError(error)
+
+      const lancamentos = (data ?? []).map((item) => ({
+        id: item.id,
+        categoria_id: item.categoria_id,
+      }))
+
+      return {
+        mensagem: 'Lançamentos criados com sucesso.',
+        total: lancamentos.length,
+        lancamentos,
+      }
     },
 
     async findAll(filters) {

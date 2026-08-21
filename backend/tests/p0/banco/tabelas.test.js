@@ -19,6 +19,7 @@ const tables = [
       'categoria_id',
       'data_referencia',
       'valor',
+      'percentual_imposto',
       'observacao',
       'status',
       'substitui_lancamento_id',

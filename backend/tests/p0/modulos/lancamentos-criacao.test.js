@@ -8,8 +8,9 @@ import { createLancamentosService } from '../../../src/modules/p0/lancamentos/la
 const validPayload = {
   empresa_id: 1,
   categoria_id: 2,
-  data_referencia: '2026-08-20',
+  data_referencia: '2026-08-01',
   valor: 5000.55,
+  percentual_imposto: 7.25,
   observacao: 'Lancamento de demonstracao.',
 }
 
@@ -23,9 +24,25 @@ const createdFixture = {
   substituido_em: null,
 }
 
+const validBatchPayload = {
+  empresa_id: 1,
+  data_referencia: '2026-08-01',
+  itens: [
+    { categoria_id: 2, valor: 5000.55, percentual_imposto: 7.25, observacao: 'Vendas.' },
+    { categoria_id: 3, valor: 1500, percentual_imposto: 3 },
+  ],
+}
+
+const batchFixture = {
+  mensagem: 'Lançamentos criados com sucesso.',
+  total: 2,
+  lancamentos: [{ id: 31, categoria_id: 2 }, { id: 32, categoria_id: 3 }],
+}
+
 function createService(overrides = {}) {
   const calls = {
     create: 0,
+    createBatch: 0,
     findCategory: 0,
   }
 
@@ -48,6 +65,11 @@ function createService(overrides = {}) {
         calls.create += 1
         calls.createdPayload = payload
         return createdFixture
+      },
+      async createBatch(payload) {
+        calls.createBatch += 1
+        calls.batchPayload = payload
+        return batchFixture
       },
     },
   })
@@ -130,6 +152,14 @@ describe('service de criacao de lancamentos', () => {
     )
     assert.equal(calls.create, 0)
   })
+
+  test('criacao em lote valida a empresa e delega uma unica operacao', async () => {
+    const { service, calls } = createService()
+
+    assert.deepEqual(await service.criarLote(validBatchPayload), batchFixture)
+    assert.equal(calls.createBatch, 1)
+    assert.deepEqual(calls.batchPayload, validBatchPayload)
+  })
 })
 
 describe('repository de criacao de lancamentos', () => {
@@ -140,8 +170,9 @@ describe('repository de criacao de lancamentos', () => {
       id: 31,
       empresa_id: 1,
       categoria_id: 2,
-      data_referencia: '2026-08-20',
+      data_referencia: '2026-08-01',
       valor: '5000.55',
+      percentual_imposto: '7.2500',
       observacao: 'Lancamento de demonstracao.',
       status: 'ATIVO',
       substitui_lancamento_id: null,
@@ -180,11 +211,59 @@ describe('repository de criacao de lancamentos', () => {
     })
     assert.match(selectedColumns, /empresa_id/)
     assert.equal(created.valor, 5000.55)
+    assert.equal(created.percentual_imposto, 7.25)
     assert.deepEqual(created, createdFixture)
+  })
+
+  test('criacao em lote usa uma unica RPC com todas as categorias', async () => {
+    let rpcName
+    let rpcParameters
+    const repository = createLancamentosRepository({
+      async rpc(name, parameters) {
+        rpcName = name
+        rpcParameters = parameters
+        return {
+          data: [{ id: 31, categoria_id: 2 }, { id: 32, categoria_id: 3 }],
+          error: null,
+        }
+      },
+    })
+
+    assert.deepEqual(await repository.createBatch(validBatchPayload), batchFixture)
+    assert.equal(rpcName, 'criar_lancamentos_lote_p0')
+    assert.deepEqual(rpcParameters, {
+      p_empresa_id: 1,
+      p_data_referencia: '2026-08-01',
+      p_itens: [
+        { categoria_id: 2, valor: 5000.55, percentual_imposto: 7.25, observacao: 'Vendas.' },
+        { categoria_id: 3, valor: 1500, percentual_imposto: 3, observacao: null },
+      ],
+    })
   })
 })
 
 describe('endpoint de criacao de lancamentos', () => {
+  test('POST /api/lancamentos/lote cria todas as categorias com HTTP 201', async () => {
+    let receivedPayload
+
+    await withApp({
+      async criarLote(payload) {
+        receivedPayload = payload
+        return batchFixture
+      },
+    }, async (app) => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/lancamentos/lote',
+        payload: validBatchPayload,
+      })
+
+      assert.equal(response.statusCode, 201)
+      assert.deepEqual(receivedPayload, validBatchPayload)
+      assert.deepEqual(response.json(), batchFixture)
+    })
+  })
+
   test('POST /api/lancamentos cria um registro ATIVO com HTTP 201', async () => {
     let receivedPayload
 
@@ -210,8 +289,9 @@ describe('endpoint de criacao de lancamentos', () => {
     const payload = {
       empresa_id: 1,
       categoria_id: 2,
-      data_referencia: '2026-08-20',
+      data_referencia: '2026-08-01',
       valor: 5000,
+      percentual_imposto: 7.25,
     }
 
     await withApp({
@@ -260,7 +340,12 @@ describe('endpoint de criacao de lancamentos', () => {
     ['valor negativo', { ...validPayload, valor: -1 }],
     ['valor com mais de duas casas', { ...validPayload, valor: 10.123 }],
     ['valor acima do banco', { ...validPayload, valor: 1000000000000 }],
+    ['percentual ausente', { ...validPayload, percentual_imposto: undefined }],
+    ['percentual negativo', { ...validPayload, percentual_imposto: -0.01 }],
+    ['percentual acima de cem', { ...validPayload, percentual_imposto: 100.01 }],
+    ['percentual com mais de duas casas', { ...validPayload, percentual_imposto: 7.123 }],
     ['data invalida', { ...validPayload, data_referencia: '2026-02-30' }],
+    ['data fora do primeiro dia', { ...validPayload, data_referencia: '2026-08-20' }],
     ['status reservado', { ...validPayload, status: 'SUBSTITUIDO' }],
     ['lancamento anterior reservado', { ...validPayload, substitui_lancamento_id: 10 }],
     ['motivo reservado', { ...validPayload, motivo_substituicao: 'Correcao' }],

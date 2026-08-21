@@ -1,5 +1,10 @@
 export function createLancamentosController(lancamentosService) {
   return {
+    async criarLote(request, reply) {
+      const resultado = await lancamentosService.criarLote({ ...request.body })
+      return reply.status(201).send(resultado)
+    },
+
     async substituir(request, reply) {
       const resultado = await lancamentosService.substituir(
         request.params.id,

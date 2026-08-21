@@ -108,8 +108,9 @@ test('fluxo remoto cria, substitui, preserva historico e limpa os dados', {
       payload: {
         empresa_id: primary.empresa_id,
         categoria_id: primary.id,
-        data_referencia: '2026-08-20',
+        data_referencia: '2026-08-01',
         valor: 5000,
+        percentual_imposto: 7.25,
         observacao: observations[0],
       },
     })
@@ -121,8 +122,9 @@ test('fluxo remoto cria, substitui, preserva historico e limpa os dados', {
       url: `/api/lancamentos/${original.id}/substituir`,
       payload: {
         categoria_id: anotherCompany.id,
-        data_referencia: '2026-08-20',
+        data_referencia: '2026-08-01',
         valor: 5100,
+        percentual_imposto: 7.25,
         observacao: observations[3],
         motivo_substituicao: 'Categoria incompativel para validar rollback.',
       },
@@ -143,8 +145,9 @@ test('fluxo remoto cria, substitui, preserva historico e limpa os dados', {
       url: `/api/lancamentos/${original.id}/substituir`,
       payload: {
         categoria_id: primary.id,
-        data_referencia: '2026-08-21',
+        data_referencia: '2026-09-01',
         valor: 5500,
+        percentual_imposto: 8,
         observacao: observations[1],
         motivo_substituicao: 'Primeira correcao do teste integrado.',
       },
@@ -158,8 +161,9 @@ test('fluxo remoto cria, substitui, preserva historico e limpa os dados', {
       url: `/api/lancamentos/${original.id}/substituir`,
       payload: {
         categoria_id: primary.id,
-        data_referencia: '2026-08-21',
+        data_referencia: '2026-09-01',
         valor: 5600,
+        percentual_imposto: 8,
         observacao: observations[4],
         motivo_substituicao: 'Tentativa conflitante do teste integrado.',
       },
@@ -177,8 +181,9 @@ test('fluxo remoto cria, substitui, preserva historico e limpa os dados', {
       url: `/api/lancamentos/${firstReplacement.novo_lancamento_id}/substituir`,
       payload: {
         categoria_id: primary.id,
-        data_referencia: '2026-08-22',
+        data_referencia: '2026-10-01',
         valor: 5750,
+        percentual_imposto: 9,
         observacao: observations[2],
         motivo_substituicao: 'Segunda correcao do teste integrado.',
       },

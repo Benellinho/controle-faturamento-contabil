@@ -18,7 +18,9 @@ GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 
 CREATE TABLE public.empresas (
     id BIGSERIAL PRIMARY KEY,
-    nome VARCHAR(150) NOT NULL
+    nome VARCHAR(150) NOT NULL,
+    cnpj CHAR(14) NOT NULL UNIQUE
+        CHECK (cnpj ~ '^[0-9]{14}$')
 );
 
 CREATE TABLE public.categorias (
@@ -34,9 +36,13 @@ CREATE TABLE public.lancamentos (
         REFERENCES public.empresas(id),
     categoria_id BIGINT NOT NULL
         REFERENCES public.categorias(id),
-    data_referencia DATE NOT NULL,
+    data_referencia DATE NOT NULL
+        CONSTRAINT lancamentos_data_referencia_primeiro_dia_check
+        CHECK (EXTRACT(DAY FROM data_referencia) = 1),
     valor NUMERIC(14,2) NOT NULL
         CHECK (valor > 0),
+    percentual_imposto NUMERIC(5,2) NOT NULL
+        CHECK (percentual_imposto >= 0 AND percentual_imposto <= 100),
     observacao TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'ATIVO'
         CHECK (status IN ('ATIVO', 'SUBSTITUIDO')),

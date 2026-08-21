@@ -5,6 +5,7 @@ CREATE OR REPLACE FUNCTION public.substituir_lancamento_p0(
     p_categoria_id BIGINT,
     p_data_referencia DATE,
     p_valor NUMERIC(14,2),
+    p_percentual_imposto NUMERIC(5,2),
     p_observacao TEXT,
     p_motivo_substituicao TEXT
 )
@@ -25,7 +26,10 @@ BEGIN
         OR p_categoria_id IS NULL
         OR p_data_referencia IS NULL
         OR p_valor IS NULL
-        OR p_valor <= 0 THEN
+        OR p_valor <= 0
+        OR p_percentual_imposto IS NULL
+        OR p_percentual_imposto < 0
+        OR p_percentual_imposto > 100 THEN
         RAISE EXCEPTION USING
             ERRCODE = 'P0001',
             MESSAGE = 'PARAMETROS_INVALIDOS';
@@ -71,6 +75,7 @@ BEGIN
         categoria_id,
         data_referencia,
         valor,
+        percentual_imposto,
         observacao,
         status,
         substitui_lancamento_id,
@@ -82,6 +87,7 @@ BEGIN
         p_categoria_id,
         p_data_referencia,
         p_valor,
+        p_percentual_imposto,
         p_observacao,
         'ATIVO',
         v_original.id,
@@ -114,6 +120,7 @@ REVOKE ALL ON FUNCTION public.substituir_lancamento_p0(
     BIGINT,
     DATE,
     NUMERIC,
+    NUMERIC,
     TEXT,
     TEXT
 ) FROM PUBLIC, anon, authenticated;
@@ -122,6 +129,7 @@ GRANT EXECUTE ON FUNCTION public.substituir_lancamento_p0(
     BIGINT,
     BIGINT,
     DATE,
+    NUMERIC,
     NUMERIC,
     TEXT,
     TEXT

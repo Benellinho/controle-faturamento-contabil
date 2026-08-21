@@ -22,6 +22,19 @@ const monetaryValueSchema = {
   multipleOf: 0.01,
 }
 
+const taxPercentageSchema = {
+  type: 'number',
+  minimum: 0,
+  maximum: 100,
+  multipleOf: 0.01,
+}
+
+const referenceDateSchema = {
+  type: 'string',
+  format: 'date',
+  pattern: '^\\d{4}-\\d{2}-01$',
+}
+
 const lancamentoListItemSchema = {
   type: 'object',
   additionalProperties: false,
@@ -31,15 +44,17 @@ const lancamentoListItemSchema = {
     'empresa',
     'categoria',
     'valor',
+    'percentual_imposto',
     'status',
     'criado_em',
   ],
   properties: {
     id: safeIdSchema,
-    data_referencia: { type: 'string', format: 'date' },
+    data_referencia: referenceDateSchema,
     empresa: empresaResponseSchema,
     categoria: categoriaResponseSchema,
     valor: monetaryValueSchema,
+    percentual_imposto: taxPercentageSchema,
     status: { type: 'string', enum: ['ATIVO', 'SUBSTITUIDO'] },
     criado_em: { type: 'string' },
   },
@@ -54,6 +69,7 @@ const lancamentoCreationResponseSchema = {
     'categoria_id',
     'data_referencia',
     'valor',
+    'percentual_imposto',
     'observacao',
     'status',
     'substitui_lancamento_id',
@@ -65,8 +81,9 @@ const lancamentoCreationResponseSchema = {
     id: safeIdSchema,
     empresa_id: safeIdSchema,
     categoria_id: safeIdSchema,
-    data_referencia: { type: 'string', format: 'date' },
+    data_referencia: referenceDateSchema,
     valor: monetaryValueSchema,
+    percentual_imposto: taxPercentageSchema,
     observacao: nullableStringSchema,
     status: { type: 'string', const: 'ATIVO' },
     substitui_lancamento_id: { type: 'null' },
@@ -151,17 +168,69 @@ export const criarLancamentoSchema = {
   body: {
     type: 'object',
     additionalProperties: false,
-    required: ['empresa_id', 'categoria_id', 'data_referencia', 'valor'],
+    required: ['empresa_id', 'categoria_id', 'data_referencia', 'valor', 'percentual_imposto'],
     properties: {
       empresa_id: safeIdSchema,
       categoria_id: safeIdSchema,
-      data_referencia: { type: 'string', format: 'date' },
+      data_referencia: referenceDateSchema,
       valor: monetaryValueSchema,
+      percentual_imposto: taxPercentageSchema,
       observacao: nullableStringSchema,
     },
   },
   response: {
     201: lancamentoCreationResponseSchema,
+  },
+}
+
+export const criarLancamentosLoteSchema = {
+  body: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['empresa_id', 'data_referencia', 'itens'],
+    properties: {
+      empresa_id: safeIdSchema,
+      data_referencia: referenceDateSchema,
+      itens: {
+        type: 'array',
+        minItems: 1,
+        maxItems: 100,
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['categoria_id', 'valor', 'percentual_imposto'],
+          properties: {
+            categoria_id: safeIdSchema,
+            valor: monetaryValueSchema,
+            percentual_imposto: taxPercentageSchema,
+            observacao: nullableStringSchema,
+          },
+        },
+      },
+    },
+  },
+  response: {
+    201: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['mensagem', 'total', 'lancamentos'],
+      properties: {
+        mensagem: { type: 'string' },
+        total: { type: 'integer', minimum: 1 },
+        lancamentos: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id', 'categoria_id'],
+            properties: {
+              id: safeIdSchema,
+              categoria_id: safeIdSchema,
+            },
+          },
+        },
+      },
+    },
   },
 }
 
@@ -181,12 +250,14 @@ export const substituirLancamentoSchema = {
       'categoria_id',
       'data_referencia',
       'valor',
+      'percentual_imposto',
       'motivo_substituicao',
     ],
     properties: {
       categoria_id: safeIdSchema,
-      data_referencia: { type: 'string', format: 'date' },
+      data_referencia: referenceDateSchema,
       valor: monetaryValueSchema,
+      percentual_imposto: taxPercentageSchema,
       observacao: nullableStringSchema,
       motivo_substituicao: { type: 'string', minLength: 1 },
     },

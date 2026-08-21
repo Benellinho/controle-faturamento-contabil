@@ -1,11 +1,17 @@
 import {
   criarLancamentoSchema,
+  criarLancamentosLoteSchema,
   listarLancamentosSchema,
   obterLancamentoSchema,
   substituirLancamentoSchema,
 } from './lancamentos.schema.js'
 
 export async function lancamentosRoutes(app, options) {
+  app.post('/lote', {
+    schema: criarLancamentosLoteSchema,
+    handler: options.controller.criarLote,
+  })
+
   app.post('/', {
     schema: criarLancamentoSchema,
     handler: options.controller.criar,

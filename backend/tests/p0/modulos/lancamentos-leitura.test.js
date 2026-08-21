@@ -6,7 +6,7 @@ import { createLancamentosService } from '../../../src/modules/p0/lancamentos/la
 
 const listItemFixture = {
   id: 21,
-  data_referencia: '2026-08-20',
+  data_referencia: '2026-08-01',
   empresa: {
     id: 1,
     nome: 'EMPRESA EXEMPLO ALFA LTDA',
@@ -17,6 +17,7 @@ const listItemFixture = {
     nome: 'Vendas',
   },
   valor: 5500,
+  percentual_imposto: 7.25,
   status: 'ATIVO',
   criado_em: '2026-08-20T11:00:00',
 }

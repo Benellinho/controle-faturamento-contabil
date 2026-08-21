@@ -6,6 +6,20 @@ export function createLancamentosService({
   categoriasRepository,
 }) {
   return {
+    async criarLote(payload) {
+      const empresaExiste = await empresasRepository.existsById(payload.empresa_id)
+
+      if (!empresaExiste) {
+        throw new AppError(
+          404,
+          'EMPRESA_NAO_ENCONTRADA',
+          'A empresa informada nao foi encontrada.',
+        )
+      }
+
+      return lancamentosRepository.createBatch(payload)
+    },
+
     async substituir(id, payload) {
       const motivo = payload.motivo_substituicao.trim()
 
