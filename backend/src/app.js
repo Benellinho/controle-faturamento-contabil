@@ -27,7 +27,11 @@ function defaultServices() {
       categoriasRepository,
       empresasRepository,
     }),
-    lancamentosService: createLancamentosService(lancamentosRepository),
+    lancamentosService: createLancamentosService({
+      lancamentosRepository,
+      empresasRepository,
+      categoriasRepository,
+    }),
   }
 }
 
@@ -43,6 +47,11 @@ function errorPayload(code, message) {
 export async function buildApp(options = {}) {
   const app = Fastify({
     logger: options.logger ?? true,
+    ajv: {
+      customOptions: {
+        removeAdditional: false,
+      },
+    },
   })
   const services = options.services ?? defaultServices()
 

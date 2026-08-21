@@ -64,9 +64,11 @@ describe('service de leitura de lancamentos', () => {
   test('delega filtros da listagem ao repository', async () => {
     let receivedFilters
     const service = createLancamentosService({
-      async findAll(filters) {
-        receivedFilters = filters
-        return [listItemFixture]
+      lancamentosRepository: {
+        async findAll(filters) {
+          receivedFilters = filters
+          return [listItemFixture]
+        },
       },
     })
     const filters = {
@@ -82,9 +84,11 @@ describe('service de leitura de lancamentos', () => {
 
   test('retorna o detalhe encontrado pelo repository', async () => {
     const service = createLancamentosService({
-      async findById(id) {
-        assert.equal(id, 21)
-        return detailFixture
+      lancamentosRepository: {
+        async findById(id) {
+          assert.equal(id, 21)
+          return detailFixture
+        },
       },
     })
 
@@ -93,8 +97,10 @@ describe('service de leitura de lancamentos', () => {
 
   test('rejeita lancamento inexistente', async () => {
     const service = createLancamentosService({
-      async findById() {
-        return null
+      lancamentosRepository: {
+        async findById() {
+          return null
+        },
       },
     })
 

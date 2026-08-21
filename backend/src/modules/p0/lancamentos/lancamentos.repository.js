@@ -18,6 +18,20 @@ const detailColumns = `
   substituido_em
 `
 
+const creationColumns = `
+  id,
+  empresa_id,
+  categoria_id,
+  data_referencia,
+  valor,
+  observacao,
+  status,
+  substitui_lancamento_id,
+  motivo_substituicao,
+  criado_em,
+  substituido_em
+`
+
 function normalizeListItem(row) {
   return {
     id: row.id,
@@ -42,8 +56,40 @@ function normalizeDetail(row, substitutoId) {
   }
 }
 
+function normalizeCreated(row) {
+  return {
+    ...row,
+    valor: Number(row.valor),
+  }
+}
+
 export function createLancamentosRepository(client) {
   return {
+    async create(payload) {
+      if (!client) throw databaseQueryError('criar o lancamento')
+
+      const row = {
+        empresa_id: payload.empresa_id,
+        categoria_id: payload.categoria_id,
+        data_referencia: payload.data_referencia,
+        valor: payload.valor,
+        observacao: payload.observacao ?? null,
+        status: 'ATIVO',
+        substitui_lancamento_id: null,
+        motivo_substituicao: null,
+        substituido_em: null,
+      }
+
+      const { data, error } = await client
+        .from('lancamentos')
+        .insert(row)
+        .select(creationColumns)
+        .single()
+
+      if (error) throw databaseQueryError('criar o lancamento', error)
+      return normalizeCreated(data)
+    },
+
     async findAll(filters) {
       if (!client) throw databaseQueryError('consultar os lancamentos')
 
