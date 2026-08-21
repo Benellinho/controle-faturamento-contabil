@@ -5,8 +5,10 @@
   "main": "src/server.js",
   "scripts": {
     "check": "node --check src/server.js && node --check src/config/env.js && node --check src/lib/supabase.js",
+    "check:tests": "node --check tests/p0/banco/helpers.js && node --check tests/p0/banco/conexao.test.js && node --check tests/p0/banco/tabelas.test.js && node --check tests/p0/banco/dados-iniciais.test.js && node --check tests/p0/banco/inserir-dados-p0.js",
     "dev": "node --watch --env-file=.env src/server.js",
-    "start": "node --env-file=.env src/server.js"
+    "start": "node --env-file=.env src/server.js",
+    "test:p0:banco": "node --test --env-file=.env tests/p0/banco/conexao.test.js tests/p0/banco/tabelas.test.js tests/p0/banco/dados-iniciais.test.js"
   },
   "keywords": [],
   "author": "",
