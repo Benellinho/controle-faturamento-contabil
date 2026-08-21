@@ -335,9 +335,9 @@ Também ficam fora do P0 paginação, ordenação configurável, busca textual, 
 - [x] Listar categorias por empresa.
 - [x] Listar lançamentos com os quatro filtros.
 - [x] Consultar um lançamento e seus vizinhos no histórico.
-- [ ] Criar um lançamento válido como `ATIVO`.
-- [ ] Rejeitar categoria de outra empresa.
-- [ ] Rejeitar valor igual ou menor que zero.
+- [x] Criar um lançamento válido como `ATIVO`.
+- [x] Rejeitar categoria de outra empresa.
+- [x] Rejeitar valor igual ou menor que zero.
 - [ ] Substituir um lançamento dentro de transação.
 - [ ] Exigir motivo de substituição.
 - [ ] Rejeitar substituição de lançamento já substituído.

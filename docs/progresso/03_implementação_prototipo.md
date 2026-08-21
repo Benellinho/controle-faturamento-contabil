@@ -164,25 +164,36 @@ Evidências:
 
 Objetivo: criar registros imutáveis e válidos.
 
+**Estado atual:** concluída. A criação está implementada com validação estrutural e de relacionamentos, sem permitir campos reservados do fluxo de substituição.
+
 Passos:
 
-1. implementar `POST /api/lancamentos`;
-2. validar empresa, categoria, data e valor obrigatórios;
-3. validar valor maior que zero;
-4. validar que a categoria pertence à empresa;
-5. rejeitar campos de controle enviados pelo cliente;
-6. criar todo lançamento comum com status `ATIVO`;
-7. manter campos de substituição nulos;
-8. retornar o registro criado com HTTP `201`;
-9. garantir que a API não ofereça edição nem exclusão.
+1. [x] implementar `POST /api/lancamentos`;
+2. [x] validar empresa, categoria, data e valor obrigatórios;
+3. [x] validar valor maior que zero e com até duas casas decimais;
+4. [x] validar que a categoria pertence à empresa;
+5. [x] rejeitar campos de controle enviados pelo cliente;
+6. [x] criar todo lançamento comum com status `ATIVO`;
+7. [x] manter campos de substituição nulos;
+8. [x] retornar o registro criado com HTTP `201`;
+9. [x] garantir que a API não ofereça edição nem exclusão.
 
 Validação da etapa:
 
-- criação válida persiste um registro `ATIVO`;
-- categoria de outra empresa é rejeitada;
-- valor zero ou negativo é rejeitado;
-- payload incompleto ou com campos reservados é rejeitado;
-- falhas não criam registros parciais.
+- [x] criação válida produz um registro `ATIVO` no contrato do repository;
+- [x] categoria de outra empresa é rejeitada;
+- [x] valor zero ou negativo é rejeitado;
+- [x] payload incompleto ou com campos reservados é rejeitado;
+- [x] falhas de validação não acionam a gravação.
+
+Evidências:
+
+- teste do repository confirma os campos persistidos e a conversão do valor numérico;
+- testes do service confirmam que empresa e categoria são verificadas antes da gravação;
+- testes HTTP cobrem resposta `201`, observação opcional, campos obrigatórios, data, faixa e precisão do valor e campos reservados;
+- validação remota rejeitou categoria de outra empresa com `400 CATEGORIA_NAO_PERTENCE_EMPRESA`;
+- validação remota rejeitou campo reservado com `400 PARAMETROS_INVALIDOS`;
+- a tabela remota permaneceu com a mesma quantidade de registros antes e depois da validação.
 
 ### Etapa 5 — Implementar a substituição transacional
 
@@ -461,4 +472,4 @@ O protótipo P0 estará pronto quando:
 
 ## 8. Próxima ação recomendada
 
-Avançar para a **Etapa 4**, implementando a criação de lançamentos com validação de empresa, categoria, data e valor. A escrita deve manter o novo registro como `ATIVO` e impedir o envio de campos reservados pelo cliente.
+Avançar para a **Etapa 5**, implementando a substituição de lançamentos em uma única transação PostgreSQL. O original deve permanecer armazenado como `SUBSTITUIDO` e o novo registro deve nascer `ATIVO`, sem risco de atualização parcial.
