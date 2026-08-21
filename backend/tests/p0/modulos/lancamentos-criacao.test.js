@@ -231,6 +231,26 @@ describe('endpoint de criacao de lancamentos', () => {
     })
   })
 
+  test('aceita valor com duas casas sujeito a precisao de ponto flutuante', async () => {
+    const payload = { ...validPayload, valor: 1234.56 }
+
+    await withApp({
+      async criar(receivedPayload) {
+        assert.deepEqual(receivedPayload, payload)
+        return { ...createdFixture, valor: payload.valor }
+      },
+    }, async (app) => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/lancamentos',
+        payload,
+      })
+
+      assert.equal(response.statusCode, 201)
+      assert.equal(response.json().valor, 1234.56)
+    })
+  })
+
   const invalidPayloads = [
     ['empresa ausente', { ...validPayload, empresa_id: undefined }],
     ['categoria ausente', { ...validPayload, categoria_id: undefined }],

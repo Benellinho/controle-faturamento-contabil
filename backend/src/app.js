@@ -50,6 +50,7 @@ export async function buildApp(options = {}) {
     ajv: {
       customOptions: {
         removeAdditional: false,
+        multipleOfPrecision: 8,
       },
     },
   })
