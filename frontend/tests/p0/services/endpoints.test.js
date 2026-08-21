@@ -1,0 +1,117 @@
+import assert from 'node:assert/strict'
+import { afterEach, beforeEach, describe, test } from 'node:test'
+import {
+  listarCategorias,
+  listarEmpresas,
+} from '../../../src/services/empresasApi.js'
+import {
+  criarLancamento,
+  listarLancamentos,
+  obterLancamento,
+  substituirLancamento,
+} from '../../../src/services/lancamentosApi.js'
+
+const originalFetch = globalThis.fetch
+const originalApiUrl = globalThis.process.env.VITE_API_URL
+let requests
+
+beforeEach(() => {
+  requests = []
+  globalThis.process.env.VITE_API_URL = 'https://api.exemplo.test'
+  globalThis.fetch = async (url, options) => {
+    requests.push({ url, options })
+    return new Response(JSON.stringify([]), {
+      status: options.method === 'POST' ? 201 : 200,
+      headers: { 'content-type': 'application/json' },
+    })
+  }
+})
+
+afterEach(() => {
+  globalThis.fetch = originalFetch
+
+  if (originalApiUrl === undefined) {
+    delete globalThis.process.env.VITE_API_URL
+  } else {
+    globalThis.process.env.VITE_API_URL = originalApiUrl
+  }
+})
+
+describe('endpoints de empresas e categorias', () => {
+  test('lista empresas pela rota do contrato', async () => {
+    await listarEmpresas()
+
+    assert.equal(requests[0].url, 'https://api.exemplo.test/api/empresas')
+    assert.equal(requests[0].options.method, 'GET')
+  })
+
+  test('lista categorias usando o identificador da empresa', async () => {
+    await listarCategorias(25)
+
+    assert.equal(
+      requests[0].url,
+      'https://api.exemplo.test/api/empresas/25/categorias',
+    )
+  })
+})
+
+describe('endpoints de lancamentos', () => {
+  test('lista sem adicionar uma query string vazia', async () => {
+    await listarLancamentos()
+
+    assert.equal(requests[0].url, 'https://api.exemplo.test/api/lancamentos')
+  })
+
+  test('envia somente filtros preenchidos', async () => {
+    await listarLancamentos({
+      empresa_id: 1,
+      categoria_id: '',
+      data: '2026-08-21',
+      status: null,
+      campo_fora_do_contrato: 'ignorado',
+    })
+
+    assert.equal(
+      requests[0].url,
+      'https://api.exemplo.test/api/lancamentos?empresa_id=1&data=2026-08-21',
+    )
+  })
+
+  test('consulta o detalhe pelo identificador', async () => {
+    await obterLancamento(15)
+
+    assert.equal(requests[0].url, 'https://api.exemplo.test/api/lancamentos/15')
+  })
+
+  test('cria um lancamento com POST e o payload recebido', async () => {
+    const payload = {
+      empresa_id: 1,
+      categoria_id: 2,
+      data_referencia: '2026-08-21',
+      valor: 5000,
+    }
+
+    await criarLancamento(payload)
+
+    assert.equal(requests[0].options.method, 'POST')
+    assert.equal(requests[0].options.body, JSON.stringify(payload))
+  })
+
+  test('substitui um lancamento pela rota transacional', async () => {
+    const payload = {
+      categoria_id: 2,
+      data_referencia: '2026-08-21',
+      valor: 5500,
+      motivo_substituicao: 'Correção do valor.',
+    }
+
+    await substituirLancamento(15, payload)
+
+    assert.equal(
+      requests[0].url,
+      'https://api.exemplo.test/api/lancamentos/15/substituir',
+    )
+    assert.equal(requests[0].options.method, 'POST')
+    assert.equal(requests[0].options.body, JSON.stringify(payload))
+  })
+})
