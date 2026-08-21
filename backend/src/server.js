@@ -1,31 +1,17 @@
-import Fastify from 'fastify'
-import cors from '@fastify/cors'
+import { buildApp } from './app.js'
 import { env } from './config/env.js'
-import { isSupabaseConfigured } from './lib/supabase.js'
 
-const app = Fastify({
-  logger: true,
-})
-
-await app.register(cors, {
-  origin: env.frontendUrl,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-})
-
-app.get('/health', async () => {
-  return {
-    status: 'ok',
-    service: 'controle-faturamento-api',
-    supabase: isSupabaseConfigured ? 'configured' : 'not_configured',
-  }
-})
+let app
 
 try {
+  app = await buildApp()
+
   await app.listen({
     port: env.port,
     host: '127.0.0.1',
   })
 } catch (error) {
-  app.log.error(error)
+  if (app) app.log.error(error)
+  else console.error(error)
   process.exit(1)
 }
