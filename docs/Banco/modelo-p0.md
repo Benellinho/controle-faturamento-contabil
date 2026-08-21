@@ -53,8 +53,9 @@ Uma empresa possui várias categorias e vários lançamentos. Uma categoria pert
 | `id` | `BIGSERIAL` | Chave primária |
 | `empresa_id` | `BIGINT` | Empresa do lançamento, obrigatório |
 | `categoria_id` | `BIGINT` | Categoria do lançamento, obrigatório |
-| `data_referencia` | `DATE` | Obrigatório |
+| `data_referencia` | `DATE` | Obrigatório, sempre no primeiro dia do mês |
 | `valor` | `NUMERIC(14,2)` | Obrigatório e maior que zero |
+| `percentual_imposto` | `NUMERIC(5,2)` | Obrigatório, entre `0` e `100` |
 | `observacao` | `TEXT` | Opcional |
 | `status` | `VARCHAR(20)` | `ATIVO` ou `SUBSTITUIDO` |
 | `substitui_lancamento_id` | `BIGINT` | Lançamento anterior, quando houver |
@@ -83,8 +84,12 @@ CREATE TABLE lancamentos (
     id BIGSERIAL PRIMARY KEY,
     empresa_id BIGINT NOT NULL REFERENCES empresas(id),
     categoria_id BIGINT NOT NULL REFERENCES categorias(id),
-    data_referencia DATE NOT NULL,
+    data_referencia DATE NOT NULL
+        CONSTRAINT lancamentos_data_referencia_primeiro_dia_check
+        CHECK (EXTRACT(DAY FROM data_referencia) = 1),
     valor NUMERIC(14,2) NOT NULL CHECK (valor > 0),
+    percentual_imposto NUMERIC(5,2) NOT NULL
+        CHECK (percentual_imposto >= 0 AND percentual_imposto <= 100),
     observacao TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'ATIVO'
         CHECK (status IN ('ATIVO', 'SUBSTITUIDO')),
@@ -160,6 +165,10 @@ substitui_lancamento_id = NULL
 motivo_substituicao = NULL
 substituido_em = NULL
 ```
+
+Na criação pela interface, todas as categorias da empresa são enviadas à função `criar_lancamentos_lote_p0` e inseridas em uma única transação. Categoria ausente, repetida ou pertencente a outra empresa provoca rollback integral.
+
+O valor do imposto não é armazenado e deve ser calculado por `valor * percentual_imposto / 100`.
 
 ## 8. Transação de substituição
 

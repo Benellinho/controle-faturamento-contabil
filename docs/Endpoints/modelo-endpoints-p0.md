@@ -138,7 +138,7 @@ GET /api/lancamentos?empresa_id=1&status=ATIVO
 [
   {
     "id": 16,
-    "data_referencia": "2026-08-20",
+    "data_referencia": "2026-08-01",
     "empresa": {
       "id": 1,
       "nome": "EMPRESA EXEMPLO ALFA LTDA",
@@ -149,6 +149,7 @@ GET /api/lancamentos?empresa_id=1&status=ATIVO
       "nome": "Serviços"
     },
     "valor": 5500.00,
+    "percentual_imposto": 7.25,
     "status": "ATIVO",
     "criado_em": "2026-08-20T11:00:00"
   }
@@ -177,8 +178,9 @@ Retorna os detalhes e os identificadores necessários para navegar no histórico
     "id": 2,
     "nome": "Serviços"
   },
-  "data_referencia": "2026-08-20",
+  "data_referencia": "2026-08-01",
   "valor": 5500.00,
+  "percentual_imposto": 7.25,
   "observacao": "Serviço referente ao contrato X",
   "status": "ATIVO",
   "substitui_lancamento_id": 15,
@@ -208,19 +210,21 @@ Cria um lançamento comum.
 {
   "empresa_id": 1,
   "categoria_id": 2,
-  "data_referencia": "2026-08-20",
+  "data_referencia": "2026-08-01",
   "valor": 5000.00,
+  "percentual_imposto": 7.25,
   "observacao": "Serviço referente ao contrato X"
 }
 ```
 
 ### Validações
 
-- `empresa_id`, `categoria_id`, `data_referencia` e `valor` são obrigatórios;
+- `empresa_id`, `categoria_id`, `data_referencia`, `valor` e `percentual_imposto` são obrigatórios;
 - empresa e categoria devem existir;
 - a categoria deve pertencer à empresa;
-- a data deve ser válida;
+- a data deve ser válida e representar o primeiro dia do mês (`YYYY-MM-01`);
 - o valor deve ser maior que zero;
+- o percentual de imposto deve estar entre `0` e `100`, com até duas casas decimais;
 - `observacao` é opcional.
 
 O cliente não pode informar `status`, `substitui_lancamento_id`, `motivo_substituicao` ou `substituido_em`.
@@ -232,14 +236,54 @@ O cliente não pode informar `status`, `substitui_lancamento_id`, `motivo_substi
   "id": 15,
   "empresa_id": 1,
   "categoria_id": 2,
-  "data_referencia": "2026-08-20",
+  "data_referencia": "2026-08-01",
   "valor": 5000.00,
+  "percentual_imposto": 7.25,
   "observacao": "Serviço referente ao contrato X",
   "status": "ATIVO",
   "substitui_lancamento_id": null,
   "motivo_substituicao": null,
   "criado_em": "2026-08-20T10:30:00",
   "substituido_em": null
+}
+```
+
+### 9.1 `POST /api/lancamentos/lote`
+
+Cria, em uma única transação, um lançamento para cada categoria da empresa.
+
+```json
+{
+  "empresa_id": 1,
+  "data_referencia": "2026-08-01",
+  "itens": [
+    {
+      "categoria_id": 2,
+      "valor": 5000.00,
+      "percentual_imposto": 7.25,
+      "observacao": "Vendas"
+    },
+    {
+      "categoria_id": 3,
+      "valor": 1500.00,
+      "percentual_imposto": 3.00
+    }
+  ]
+}
+```
+
+O lote deve conter exatamente todas as categorias da empresa, sem repetições. Qualquer falha desfaz o lote inteiro.
+
+Resposta `201`:
+
+```json
+{
+  "mensagem": "Lançamentos criados com sucesso.",
+  "total": 2,
+  "lancamentos": [
+    { "id": 15, "categoria_id": 2 },
+    { "id": 16, "categoria_id": 3 }
+  ]
 }
 ```
 
@@ -254,8 +298,9 @@ A empresa não é recebida no corpo. O backend reutiliza a empresa do lançament
 ```json
 {
   "categoria_id": 2,
-  "data_referencia": "2026-08-20",
+  "data_referencia": "2026-08-01",
   "valor": 5500.00,
+  "percentual_imposto": 8.00,
   "observacao": "Serviço referente ao contrato X",
   "motivo_substituicao": "Valor informado incorretamente"
 }
@@ -266,8 +311,9 @@ A empresa não é recebida no corpo. O backend reutiliza a empresa do lançament
 - o lançamento original deve existir;
 - o lançamento original deve estar `ATIVO`;
 - a categoria deve pertencer à empresa do original;
-- a data deve ser válida;
+- a data deve ser válida e representar o primeiro dia do mês (`YYYY-MM-01`);
 - o valor deve ser maior que zero;
+- o percentual de imposto deve estar entre `0` e `100`, com até duas casas decimais;
 - o motivo deve conter texto após remover espaços das extremidades.
 
 ### Operação

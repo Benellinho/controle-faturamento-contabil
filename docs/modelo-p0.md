@@ -11,8 +11,8 @@ O protótipo deve comprovar a imutabilidade dos dados de negócio e a navegaçã
 ## 2. Premissas da demonstração
 
 - um lançamento representa um valor de faturamento/receita;
-- a data de referência é operacional, sem regras de competência ou fechamento;
-- qualquer data válida pode ser informada, inclusive futura;
+- a referência é mensal e o usuário informa somente mês e ano;
+- o sistema inicia no mês atual e persiste a competência como o primeiro dia do mês;
 - duplicidades não serão identificadas automaticamente;
 - empresas, com nome e CNPJ, e categorias serão previamente inseridas no banco;
 - a listagem exibirá registros `ATIVO` e `SUBSTITUIDO`;
@@ -24,7 +24,7 @@ O protótipo deve comprovar a imutabilidade dos dados de negócio e a navegaçã
 O P0 terá somente:
 
 - empresas e categorias previamente cadastradas;
-- criação de lançamentos;
+- criação transacional de lançamentos para todas as categorias da empresa;
 - listagem e filtros básicos;
 - visualização de detalhes;
 - substituição com motivo obrigatório;
@@ -52,11 +52,11 @@ Essas funcionalidades poderão ser avaliadas no MVP.
 ```text
 Abrir listagem
       ↓
-Criar lançamento
+Criar lote de lançamentos
       ↓
-Selecionar empresa e categoria
+Selecionar empresa e carregar todas as categorias
       ↓
-Informar data, valor e observação
+Informar data comum, valor, percentual de imposto e observação por categoria
       ↓
 Salvar como ATIVO
       ↓
@@ -85,7 +85,7 @@ No P0, essa regra será garantida pelo backend, sem endpoints de edição ou exc
 
 ### 6.2 Empresa e categoria
 
-Cada categoria pertence a uma empresa. Ao selecionar uma empresa, o formulário deve mostrar somente suas categorias.
+Cada categoria pertence a uma empresa. Ao selecionar uma empresa, o formulário deve mostrar todas as suas categorias. A confirmação deve gravar todas em uma única transação ou não gravar nenhuma.
 
 Cada empresa possui CNPJ obrigatório, único e com dígitos verificadores válidos. O banco e a API armazenam o CNPJ somente com os 14 dígitos, enquanto o frontend o apresenta no formato `00.000.000/0000-00`.
 
@@ -106,7 +106,7 @@ Uma substituição deve:
 
 - partir de um lançamento existente e `ATIVO`;
 - manter a mesma empresa;
-- permitir alterar categoria, data, valor e observação;
+- permitir alterar categoria, data, valor, percentual de imposto e observação;
 - exigir motivo em texto livre;
 - criar um novo lançamento `ATIVO`;
 - marcar o original como `SUBSTITUIDO`;
@@ -122,10 +122,13 @@ Se qualquer etapa falhar, nenhuma alteração parcial pode permanecer.
 Campos do formulário:
 
 - empresa — obrigatória, identificada por nome e CNPJ;
-- categoria — obrigatória e pertencente à empresa;
-- data de referência — obrigatória e válida;
-- valor — obrigatório e maior que zero;
-- observação — opcional.
+- mês de referência — obrigatório, iniciado no mês atual e persistido como o primeiro dia do mês;
+- todas as categorias da empresa — obrigatórias e exibidas juntas;
+- valor por categoria — obrigatório e maior que zero;
+- percentual de imposto por categoria — obrigatório, entre `0` e `100`, com até duas casas decimais;
+- observação por categoria — opcional.
+
+O valor do imposto não é armazenado. Ele é calculado por `valor * percentual_imposto / 100`.
 
 Todo lançamento comum nasce com:
 
@@ -142,8 +145,9 @@ O formulário reutiliza os dados do lançamento original:
 
 - empresa apenas para consulta;
 - categoria editável;
-- data de referência editável;
+- mês de referência editável, sempre persistido com dia `01`;
 - valor editável;
+- percentual de imposto editável;
 - observação editável;
 - motivo da substituição obrigatório.
 
@@ -169,15 +173,14 @@ Cada linha deve abrir a visualização do lançamento.
 ### 8.2 Novo lançamento
 
 ```text
-NOVO LANÇAMENTO
+NOVOS LANÇAMENTOS
 
 Empresa *              [ Empresa Exemplo Alfa — 99.999.999/0001-91 ▼ ]
-Categoria *            [ Serviços ▼ ]
-Data de referência *   [ 20/08/2026 ]
-Valor *                [ R$ 5.000,00 ]
-Observação             [________________]
+Mês de referência *    [ 08/2026 ]
+Serviços               [ R$ 5.000,00 ] [ 7,25% ] [ observação ]
+Anexo III              [ R$ 2.000,00 ] [ 6,00% ] [ observação ]
 
-[ Cancelar ]           [ Salvar lançamento ]
+[ Cancelar ]           [ Salvar todos ]
 ```
 
 ### 8.3 Visualização
@@ -199,6 +202,7 @@ Empresa               Empresa Exemplo Alfa — 99.999.999/0001-91
 Categoria             [ Serviços ▼ ]
 Data                  [ 20/08/2026 ]
 Valor                 [ R$ 5.500,00 ]
+% de imposto          [ 7,25 ]
 Observação            [________________]
 Motivo *              [________________]
 

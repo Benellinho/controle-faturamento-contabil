@@ -631,7 +631,7 @@ Cada linha representa um campo específico dentro de uma competência.
 | FK / NN | competencia_id | Chave externa |
 | FK / NN | competencia_campo_aplicavel_id | Chave externa |
 | NN | valor | Número Decimal(14,2) |
-| NN | percentual_imposto | NUMERIC(7,4) |
+| NN | percentual_imposto | NUMERIC(5,2) |
 | FK / NN | criado_por_usuario_id | UUID |
 | NN | status | Texto Limitado(15) |
 | NN | created_at | Data com hora |
@@ -889,7 +889,7 @@ Somente em `EM_CONFERENCIA` ou `FINALIZADA` a ausência total de lançamentos ex
 O percentual será armazenado como:
 
 ```text
-NUMERIC(7,4)
+NUMERIC(5,2)
 ```
 
 Isso permite representar valores como:

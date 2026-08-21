@@ -437,20 +437,83 @@ Evidências:
 
 Objetivo: impedir que telas fora do escopo confundam a validação do P0.
 
+**Estado atual:** concluída no código. A aplicação expõe somente o fluxo de lançamentos do P0, sem usuário fictício ou ações para módulos futuros, e o modal de confirmação recebeu controle de foco e teclado.
+
 Passos:
 
-1. reduzir a navegação principal aos lançamentos necessários para a demonstração;
-2. ocultar ou marcar claramente como futura qualquer tela de dashboard, usuários, competências, empresas e categorias;
-3. revisar textos que ainda mencionem estoque, cancelamento, conferência ou faturamento mensal;
-4. preservar o padrão visual já existente;
-5. conferir uso por teclado, foco de modal, labels e mensagens;
-6. conferir a interface em desktop e tela estreita.
+1. [x] reduzir a navegação principal aos lançamentos necessários para a demonstração;
+2. [x] ocultar ou marcar claramente como futura qualquer tela de dashboard, usuários, competências, empresas e categorias;
+3. [x] revisar textos que ainda mencionem estoque, cancelamento, conferência ou faturamento mensal;
+4. [x] preservar o padrão visual já existente;
+5. [x] conferir uso por teclado, foco de modal, labels e mensagens;
+6. [x] conferir as regras responsivas para desktop e tela estreita.
 
 Validação da etapa:
 
-- o avaliador consegue executar o cenário do P0 sem entrar em telas incompletas;
-- textos e ações correspondem à regra de imutabilidade;
-- não existe uma ação visual que a API não suporte.
+- [x] o avaliador consegue executar o cenário do P0 sem entrar em telas incompletas;
+- [x] textos e ações correspondem à regra de imutabilidade;
+- [x] não existe uma ação visual que a API não suporte.
+
+Evidências:
+
+- `App.jsx` registra somente listagem, criação, detalhe e substituição de lançamentos;
+- o menu principal oferece `Lançamentos` e `Novo lançamento`, ambos dentro do fluxo P0, e informa que empresas e categorias são pré-cadastradas;
+- a listagem também apresenta uma ação principal visível para abrir o formulário de novo lançamento;
+- cada tela possui URL própria: `/lancamentos`, `/lancamentos/novo`, `/lancamentos/:id` e `/lancamentos/:id/substituir`;
+- a navegação sincroniza a History API, suporta voltar/avançar e converte a raiz para `/lancamentos`;
+- `frontend/vercel.json` redireciona as URLs da SPA para `index.html`, permitindo abertura direta e atualização no deploy;
+- dashboard, usuários, cadastros de empresas/categorias e histórico antigo permanecem fora da árvore acessível da aplicação;
+- o bloco de usuário e logout fictícios foi removido;
+- o detalhe sempre retorna à listagem e continua sem editar ou excluir;
+- o modal foca inicialmente a opção segura `Voltar`, contém o foco com Tab, fecha com Escape e devolve o foco ao elemento anterior;
+- formatadores de data vazia ou inválida retornam um marcador seguro, evitando falha ao montar o formulário antes do preenchimento;
+- um limite de erro no topo da aplicação apresenta uma recuperação clara caso ocorra outra falha inesperada de renderização;
+- cabeçalho de detalhe e ações passam a quebrar linha em tela estreita, preservando o padrão visual existente;
+- 5 testes estruturais novos protegem o escopo, os acessos à criação, o menu e o comportamento acessível do modal;
+- a suíte do frontend P0 totaliza 51 testes aprovados;
+- `npm run lint --workspace frontend` e `git diff --check` foram aprovados;
+- a inspeção visual não foi executada porque nenhum navegador está conectado à sessão;
+- nenhum build do frontend foi executado.
+
+### Ajuste complementar — Lançamentos por categoria e imposto
+
+**Estado atual:** implementado no código; aguarda aplicação da migration no Supabase remoto e novo deploy do backend/frontend.
+
+Alterações:
+
+- o formulário seleciona empresa e data uma única vez;
+- todas as categorias da empresa são carregadas e exibidas juntas;
+- cada categoria exige valor e percentual de imposto entre `0` e `100`, com até duas casas decimais;
+- a observação permanece opcional por categoria;
+- o frontend envia um único lote para `POST /api/lancamentos/lote`;
+- a RPC `criar_lancamentos_lote_p0` exige exatamente todas as categorias, rejeita repetições e executa todas as inserções na mesma transação;
+- `percentual_imposto NUMERIC(5,2)` passa a integrar criação, listagem, detalhe e substituição;
+- os campos de imposto usam máscara decimal com duas casas e não exibem setas de incremento;
+- a referência é escolhida somente por mês e ano, inicia no mês atual e é persistida com dia `01`;
+- ao abrir um novo lançamento pela listagem, a empresa selecionada no filtro é reaproveitada e suas categorias são carregadas automaticamente;
+
+### Validação local da checklist da API
+
+Em 21/08/2026, o Supabase local foi recriado por `supabase db reset`, com todas as migrations e o seed fictício aplicados sem erro. Uma suíte protegida para `localhost` confirmou listagem de empresas e categorias, listagem de lançamentos sem filtros, combinação dos quatro filtros, detalhes existente e inexistente, criação válida e rejeições para campos ausentes, categoria de outra empresa e valores não positivos. O frontend também confirmou a apresentação do CNPJ formatado nas seleções, listagem e detalhes.
+- o valor calculado do imposto é exibido, mas não armazenado;
+- a substituição também permite corrigir o percentual;
+- a listagem apresenta percentual e valor calculado abaixo do valor do lançamento.
+
+Evidências locais:
+
+- 75 testes dos módulos do backend aprovados;
+- 54 testes do frontend P0 aprovados;
+- 2 testes estáticos das migrations aprovados;
+- formulário em lote renderizado pelo Vite sem erro;
+- lint, checagens de sintaxe e `git diff --check` aprovados;
+- nenhum build ou commit realizado;
+- testes remotos não executados porque a migration nova ainda não foi aplicada no Supabase remoto.
+
+Migration pendente no ambiente remoto:
+
+```text
+supabase/migrations/20260821020000_lancamentos_lote_e_imposto_p0.sql
+```
 
 ### Etapa 11 — Testar o protótipo de ponta a ponta
 
@@ -549,4 +612,4 @@ O protótipo P0 estará pronto quando:
 
 ## 8. Próxima ação recomendada
 
-Avançar para a parte restante da **Etapa 9**, implementando a tela e a ação de substituição. Listagem, filtros, criação e detalhe já consomem a API, e um teste estrutural protege o fluxo P0 contra imports diretos de `frontend/src/mocks`.
+Avançar para a **Etapa 11**, reunindo e executando o roteiro final de validação ponta a ponta com evidências reproduzíveis. As Etapas 8, 9 e 10 estão implementadas e ainda aguardam avaliação antes dos commits.
