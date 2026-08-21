@@ -279,13 +279,15 @@ Evidências:
 - 15 testes unitários da camada de serviços foram aprovados;
 - o ESLint proíbe imports de `mocks` nas páginas de faturamentos;
 - um teste estrutural percorre recursivamente os componentes de faturamentos e impede a reintrodução de imports de `mocks`;
-- 16 testes da suíte `test:p0:services` foram aprovados no total;
+- 21 testes da suíte `test:p0:services` foram aprovados no total após a Etapa 7;
 - `npm run lint --workspace frontend` foi aprovado;
 - nenhum build do frontend foi executado.
 
 ### Etapa 7 — Ajustar a navegação e a listagem do frontend
 
 Objetivo: transformar a listagem mock na entrada principal do protótipo.
+
+**Estado atual:** concluída. A listagem é a entrada inicial do protótipo, consulta os catálogos e lançamentos pela API, aplica os quatro filtros do contrato e permite abrir o detalhe pela linha ou por uma ação acessível por teclado.
 
 Arquivos principais:
 
@@ -297,24 +299,36 @@ frontend/src/components/table/*
 
 Passos:
 
-1. definir a listagem de lançamentos como fluxo principal do P0;
-2. carregar empresas e lançamentos pela API;
-3. carregar categorias conforme a empresa selecionada;
-4. implementar filtros por empresa, categoria, data e status;
-5. limpar a categoria quando a empresa mudar;
-6. aplicar os filtros pela API;
-7. substituir o status visual `CANCELADO` por `SUBSTITUIDO`;
-8. remover da tabela os campos de competência e estoque;
-9. manter data, empresa com CNPJ, categoria, valor, status e ação de visualizar;
-10. incluir estados de carregamento, vazio e falha com opção de tentar novamente;
-11. manter formatação `pt-BR` sem alterar o valor numérico enviado à API.
+1. [x] definir a listagem de lançamentos como fluxo principal do P0;
+2. [x] carregar empresas e lançamentos pela API;
+3. [x] carregar categorias conforme a empresa selecionada;
+4. [x] implementar filtros por empresa, categoria, data e status;
+5. [x] limpar a categoria quando a empresa mudar;
+6. [x] aplicar os filtros pela API;
+7. [x] substituir o status visual `CANCELADO` por `SUBSTITUIDO`;
+8. [x] remover da tabela os campos de competência e estoque;
+9. [x] manter data, empresa com CNPJ, categoria, valor, status e ação de visualizar;
+10. [x] incluir estados de carregamento, vazio e falha com opção de tentar novamente;
+11. [x] manter formatação `pt-BR` sem alterar o valor numérico enviado à API.
 
 Validação da etapa:
 
-- a listagem funciona sem importar os arrays mock;
-- todos os filtros refletem os resultados da API;
-- linhas `SUBSTITUIDO` têm identificação visual consistente;
-- clicar em uma linha abre o ID correto.
+- [x] a listagem funciona sem importar os arrays mock;
+- [x] todos os filtros refletem os resultados da API;
+- [x] linhas `SUBSTITUIDO` têm identificação visual consistente;
+- [x] clicar em uma linha abre o ID correto.
+
+Evidências:
+
+- `App.jsx` inicia em `faturamentos`, mantendo a listagem como entrada do P0;
+- empresas, categorias e lançamentos possuem estados independentes de carregamento e erro;
+- a troca de empresa limpa a categoria antes de consultar o novo catálogo;
+- a linha completa e o botão `Visualizar` encaminham o ID do lançamento ao detalhe;
+- 5 testes unitários cobrem o estado inicial, atualização, limpeza e limite dos filtros;
+- a suíte do frontend P0 totaliza 21 testes aprovados, incluindo a proteção contra imports de mocks;
+- `npm run lint --workspace frontend` foi aprovado;
+- a inspeção visual local não pôde ser executada porque não havia navegador conectado à sessão;
+- nenhum build do frontend foi executado.
 
 ### Etapa 8 — Ajustar o formulário de novo lançamento
 
