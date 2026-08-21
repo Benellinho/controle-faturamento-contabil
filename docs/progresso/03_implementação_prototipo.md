@@ -337,6 +337,8 @@ Evidências:
 
 Objetivo: criar lançamentos reais seguindo somente o contrato P0.
 
+**Estado atual:** concluída. O formulário aplica somente o contrato P0, impede submissões simultâneas, redireciona pelo ID criado e teve criação, detalhe e listagem validados contra a API remota com limpeza do registro sintético.
+
 Arquivos principais:
 
 ```text
@@ -346,27 +348,42 @@ frontend/src/pages/Faturamentos/components/FaturamentoForm.jsx
 
 Passos:
 
-1. manter apenas empresa identificada por nome e CNPJ, categoria, data, valor e observação;
-2. remover competência, tipo e estoques do formulário P0;
-3. carregar empresas pela API;
-4. carregar categorias depois da seleção da empresa;
-5. bloquear categoria enquanto não houver empresa;
-6. validar obrigatoriedade, data e valor positivo no cliente;
-7. enviar o payload para `POST /api/lancamentos`;
-8. desabilitar o envio enquanto a requisição estiver em andamento;
-9. mostrar mensagens de validação e falha da API;
-10. redirecionar para o detalhe do registro criado após sucesso.
+1. [x] manter apenas empresa identificada por nome e CNPJ, categoria, data, valor e observação;
+2. [x] remover competência, tipo e estoques do formulário P0;
+3. [x] carregar empresas pela API;
+4. [x] carregar categorias depois da seleção da empresa;
+5. [x] bloquear categoria enquanto não houver empresa;
+6. [x] validar obrigatoriedade, data e valor positivo no cliente;
+7. [x] enviar o payload para `POST /api/lancamentos`;
+8. [x] desabilitar o envio enquanto a requisição estiver em andamento;
+9. [x] mostrar mensagens de validação e falha da API;
+10. [x] redirecionar para o detalhe do registro criado após sucesso.
 
 Validação da etapa:
 
-- o formulário não envia campos fora do contrato;
-- duplo clique não cria dois registros;
-- o lançamento criado aparece na consulta e na listagem;
-- cancelar retorna à listagem sem gravar dados.
+- [x] o formulário não envia campos fora do contrato;
+- [x] duplo clique não cria dois registros;
+- [x] o lançamento criado aparece na consulta e na listagem;
+- [x] cancelar retorna à listagem sem gravar dados.
+
+Evidências:
+
+- regras de estado, validação e montagem do payload foram isoladas em `faturamentoForm.js`;
+- uma trava single-flight ignora qualquer confirmação enquanto a primeira requisição estiver pendente;
+- 8 testes unitários cobrem campos, validação de data e valor, payload, observação opcional, redirecionamento, envio duplicado e cancelamento;
+- a suíte do frontend P0 totaliza 29 testes aprovados;
+- o teste remoto criou um lançamento sintético, confirmou seu ID no detalhe e na listagem filtrada e removeu exatamente o registro marcado ao final;
+- o teste remoto inicialmente revelou rejeição indevida de `1234.56` por precisão binária no `multipleOf: 0.01`;
+- o backend passou a usar `multipleOfPrecision: 8` e ganhou um teste de regressão que aceita duas casas e continua rejeitando três;
+- a suíte dos módulos do backend totaliza 66 testes aprovados;
+- lint, checagens de sintaxe e `git diff --check` foram aprovados;
+- nenhum build do frontend foi executado.
 
 ### Etapa 9 — Implementar detalhe e substituição no frontend
 
 Objetivo: completar o fluxo principal e o histórico navegável.
+
+**Estado atual:** concluída. O detalhe oferece substituição somente para registros ativos, o novo formulário mantém a empresa imutável e o fluxo transacional abre o substituto com navegação bidirecional pelo histórico.
 
 Arquivos principais:
 
@@ -379,27 +396,42 @@ frontend/src/App.jsx
 
 Passos:
 
-1. buscar o detalhe por ID na API;
-2. exibir empresa com CNPJ, categoria, data, valor, observação, status e datas de controle;
-3. não apresentar ações de editar ou excluir;
-4. mostrar `Substituir lançamento` somente quando o status for `ATIVO`;
-5. criar a rota/tela interna de substituição;
-6. manter empresa somente para leitura;
-7. preencher categoria, data, valor e observação com os dados atuais;
-8. exigir motivo de substituição;
-9. pedir confirmação antes do envio definitivo;
-10. chamar o endpoint transacional;
-11. abrir o novo lançamento depois do sucesso;
-12. exibir `Ver lançamento anterior` quando houver anterior;
-13. exibir `Ver próximo lançamento` quando houver substituto direto;
-14. tratar `404` e `409` com mensagens específicas.
+1. [x] buscar o detalhe por ID na API;
+2. [x] exibir empresa com CNPJ, categoria, data, valor, observação, status e datas de controle;
+3. [x] não apresentar ações de editar ou excluir;
+4. [x] mostrar `Substituir lançamento` somente quando o status for `ATIVO`;
+5. [x] criar a rota/tela interna de substituição;
+6. [x] manter empresa somente para leitura;
+7. [x] preencher categoria, data, valor e observação com os dados atuais;
+8. [x] exigir motivo de substituição;
+9. [x] pedir confirmação antes do envio definitivo;
+10. [x] chamar o endpoint transacional;
+11. [x] abrir o novo lançamento depois do sucesso;
+12. [x] exibir `Ver lançamento anterior` quando houver anterior;
+13. [x] exibir `Ver próximo lançamento` quando houver substituto direto;
+14. [x] tratar `404` e `409` com mensagens específicas.
 
 Validação da etapa:
 
-- um `SUBSTITUIDO` não oferece nova substituição;
-- anterior e próximo abrem os IDs corretos;
-- atualizar a página mantém os dados persistidos;
-- o motivo aparece no histórico conforme o contrato.
+- [x] um `SUBSTITUIDO` não oferece nova substituição;
+- [x] anterior e próximo abrem os IDs corretos;
+- [x] atualizar a página mantém os dados persistidos;
+- [x] o motivo aparece no histórico conforme o contrato.
+
+Evidências:
+
+- `SubstituirFaturamento.jsx` carrega detalhe e categorias, mantém empresa somente leitura e reutiliza os dados atuais;
+- o motivo é obrigatório e o payload não contém `empresa_id`;
+- uma confirmação single-flight impede duas substituições simultâneas;
+- respostas `404` e `409` recebem mensagens e ações específicas;
+- o detalhe mostra a ação apenas em `ATIVO` e mantém ausentes editar e excluir;
+- 8 testes unitários cobrem preenchimento, motivo, payload, novo ID, erros, ação condicional, histórico e rota interna;
+- a suíte do frontend P0 totaliza 37 testes aprovados;
+- a prova remota criou original e substituto, confirmou status, datas, motivo e IDs anterior/próximo;
+- uma segunda substituição do original retornou `409` e os dois registros sintéticos foram removidos em ordem inversa;
+- lint e `git diff --check` foram aprovados;
+- a inspeção visual permaneceu indisponível porque nenhum navegador está conectado à sessão;
+- nenhum build do frontend foi executado.
 
 ### Etapa 10 — Simplificar a experiência para demonstração
 
