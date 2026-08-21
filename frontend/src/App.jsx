@@ -10,6 +10,7 @@ import NovaEmpresa from './pages/Empresas/NovaEmpresa'
 import FaturamentoDetails from './pages/Faturamentos/FaturamentoDetails'
 import FaturamentosPage from './pages/Faturamentos/FaturamentosPage'
 import NovoFaturamento from './pages/Faturamentos/NovoFaturamento'
+import SubstituirFaturamento from './pages/Faturamentos/SubstituirFaturamento'
 import HistoricoPage from './pages/Historico/HistoricoPage'
 import UsuarioDetails from './pages/Usuarios/UsuarioDetails'
 import UsuariosPage from './pages/Usuarios/UsuariosPage'
@@ -27,6 +28,7 @@ const pages = {
   faturamentos: FaturamentosPage,
   'faturamento-detalhes': FaturamentoDetails,
   'novo-faturamento': NovoFaturamento,
+  'substituir-faturamento': SubstituirFaturamento,
   categorias: CategoriasPage,
   'nova-categoria': NovaCategoria,
   historico: HistoricoPage,
@@ -39,6 +41,7 @@ const sidebarSection = {
   'usuario-detalhes': 'usuarios',
   'novo-faturamento': 'faturamentos',
   'faturamento-detalhes': 'faturamentos',
+  'substituir-faturamento': 'faturamentos',
   'nova-categoria': 'categorias',
 }
 

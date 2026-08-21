@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ConfirmModal from '../../../components/common/ConfirmModal'
 import FormActions from '../../../components/forms/FormActions'
 import FormFeedback from '../../../components/forms/FormFeedback'
@@ -6,17 +6,15 @@ import MoneyInput from '../../../components/forms/MoneyInput'
 import { listarCategorias, listarEmpresas } from '../../../services/empresasApi'
 import { criarLancamento } from '../../../services/lancamentosApi'
 import { formatCnpj, formatCurrencyFromCents, formatDate } from '../../../utils/formatters'
-
-const initialValues = {
-  empresa_id: '',
-  categoria_id: '',
-  data_referencia: '',
-  valor: null,
-  observacao: '',
-}
+import {
+  createInitialLancamentoValues,
+  createSingleFlight,
+  submitLancamentoValues,
+  validateLancamentoValues,
+} from '../faturamentoForm'
 
 function FaturamentoForm({ onCancel, onCreated }) {
-  const [values, setValues] = useState(initialValues)
+  const [values, setValues] = useState(createInitialLancamentoValues)
   const [empresas, setEmpresas] = useState([])
   const [categorias, setCategorias] = useState([])
   const [errors, setErrors] = useState({})
@@ -25,6 +23,7 @@ function FaturamentoForm({ onCancel, onCreated }) {
   const [isLoadingCategorias, setIsLoadingCategorias] = useState(false)
   const [isReviewOpen, setIsReviewOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const submission = useRef(createSingleFlight())
 
   const selectedEmpresa = empresas.find((item) => item.id === Number(values.empresa_id))
   const selectedCategoria = categorias.find((item) => item.id === Number(values.categoria_id))
@@ -86,12 +85,7 @@ function FaturamentoForm({ onCancel, onCreated }) {
   }
 
   function validate() {
-    const nextErrors = {}
-
-    if (!values.empresa_id) nextErrors.empresa_id = 'Selecione a empresa do lançamento.'
-    if (!values.categoria_id) nextErrors.categoria_id = 'Selecione a categoria do lançamento.'
-    if (!values.data_referencia) nextErrors.data_referencia = 'Informe a data de referência.'
-    if (values.valor === null || values.valor <= 0) nextErrors.valor = 'Informe um valor maior que zero.'
+    const nextErrors = validateLancamentoValues(values)
 
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
@@ -103,27 +97,24 @@ function FaturamentoForm({ onCancel, onCreated }) {
   }
 
   async function handleConfirm() {
-    setIsSubmitting(true)
-    setApiError('')
+    await submission.current.run(async () => {
+      setIsSubmitting(true)
+      setApiError('')
 
-    try {
-      const lancamento = await criarLancamento({
-        empresa_id: Number(values.empresa_id),
-        categoria_id: Number(values.categoria_id),
-        data_referencia: values.data_referencia,
-        valor: values.valor / 100,
-        observacao: values.observacao.trim() || undefined,
-      })
-
-      setIsReviewOpen(false)
-      onCreated(lancamento.id)
-    } catch (error) {
-      setIsReviewOpen(false)
-      setApiError(error.message)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    } finally {
-      setIsSubmitting(false)
-    }
+      try {
+        await submitLancamentoValues(values, {
+          createLancamento: criarLancamento,
+          onCreated,
+        })
+        setIsReviewOpen(false)
+      } catch (error) {
+        setIsReviewOpen(false)
+        setApiError(error.message)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      } finally {
+        setIsSubmitting(false)
+      }
+    })
   }
 
   return (

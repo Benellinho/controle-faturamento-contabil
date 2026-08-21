@@ -72,7 +72,14 @@ function FaturamentoDetails({ onNavigate, recordId, returnPage = 'faturamentos' 
   return (
     <div className="detail-page">
       <DetailPageHeader
-        actions={<StatusBadge status={lancamento.status} />}
+        actions={(
+          <>
+            <StatusBadge status={lancamento.status} />
+            {lancamento.status === 'ATIVO' && (
+              <button className="btn btn-primary btn-sm" type="button" onClick={() => onNavigate('substituir-faturamento', lancamento.id)}>Substituir lançamento</button>
+            )}
+          </>
+        )}
         backLabel={returnLabels[backPage]}
         eyebrow="Lançamento"
         onBack={() => onNavigate(backPage)}
