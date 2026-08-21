@@ -6,32 +6,40 @@ import TableEmpty from '../../components/table/TableEmpty'
 import { listarCategorias, listarEmpresas } from '../../services/empresasApi'
 import { listarLancamentos } from '../../services/lancamentosApi'
 import { formatCnpj, formatCurrency, formatDate } from '../../utils/formatters'
-
-const initialFilters = {
-  empresa_id: '',
-  categoria_id: '',
-  data: '',
-  status: '',
-}
+import {
+  createInitialFilters,
+  hasActiveLancamentosFilters,
+  updateLancamentosFilter,
+} from './faturamentosList'
 
 function FaturamentosPage({ onNavigate }) {
-  const [filters, setFilters] = useState(initialFilters)
+  const [filters, setFilters] = useState(createInitialFilters)
   const [empresas, setEmpresas] = useState([])
   const [categorias, setCategorias] = useState([])
   const [lancamentos, setLancamentos] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingEmpresas, setIsLoadingEmpresas] = useState(true)
+  const [isLoadingCategorias, setIsLoadingCategorias] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const [catalogError, setCatalogError] = useState('')
+  const [empresasError, setEmpresasError] = useState('')
+  const [categoriasError, setCategoriasError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
-  const hasActiveFilters = Object.values(filters).some(Boolean)
+  const hasActiveFilters = hasActiveLancamentosFilters(filters)
+  const catalogError = empresasError || categoriasError
 
   useEffect(() => {
     const controller = new AbortController()
 
     listarEmpresas({ signal: controller.signal })
-      .then(setEmpresas)
+      .then((data) => {
+        setEmpresas(data)
+        setEmpresasError('')
+      })
       .catch((error) => {
-        if (!controller.signal.aborted) setCatalogError(error.message)
+        if (!controller.signal.aborted) setEmpresasError(error.message)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoadingEmpresas(false)
       })
 
     return () => controller.abort()
@@ -45,9 +53,15 @@ function FaturamentosPage({ onNavigate }) {
     }
 
     listarCategorias(filters.empresa_id, { signal: controller.signal })
-      .then(setCategorias)
+      .then((data) => {
+        setCategorias(data)
+        setCategoriasError('')
+      })
       .catch((error) => {
-        if (!controller.signal.aborted) setCatalogError(error.message)
+        if (!controller.signal.aborted) setCategoriasError(error.message)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoadingCategorias(false)
       })
 
     return () => controller.abort()
@@ -57,7 +71,10 @@ function FaturamentosPage({ onNavigate }) {
     const controller = new AbortController()
 
     listarLancamentos(filters, { signal: controller.signal })
-      .then(setLancamentos)
+      .then((data) => {
+        setLancamentos(data)
+        setErrorMessage('')
+      })
       .catch((error) => {
         if (!controller.signal.aborted) setErrorMessage(error.message)
       })
@@ -71,26 +88,35 @@ function FaturamentosPage({ onNavigate }) {
   function updateFilter(field, value) {
     setIsLoading(true)
     setErrorMessage('')
-    if (field === 'empresa_id') setCategorias([])
-    setFilters((current) => ({
-      ...current,
-      [field]: value,
-      ...(field === 'empresa_id' ? { categoria_id: '' } : {}),
-    }))
+    if (field === 'empresa_id') {
+      setCategorias([])
+      setCategoriasError('')
+      setIsLoadingCategorias(Boolean(value))
+    }
+    setFilters((current) => updateLancamentosFilter(current, field, value))
   }
 
   function clearFilters() {
     setIsLoading(true)
     setErrorMessage('')
     setCategorias([])
-    setFilters(initialFilters)
+    setCategoriasError('')
+    setIsLoadingCategorias(false)
+    setFilters(createInitialFilters())
   }
 
   function retryLoading() {
     setIsLoading(true)
+    setIsLoadingEmpresas(true)
+    setIsLoadingCategorias(Boolean(filters.empresa_id))
     setErrorMessage('')
-    setCatalogError('')
+    setEmpresasError('')
+    setCategoriasError('')
     setReloadKey((value) => value + 1)
+  }
+
+  function openDetails(id) {
+    onNavigate('faturamento-detalhes', id)
   }
 
   return (
@@ -107,15 +133,15 @@ function FaturamentosPage({ onNavigate }) {
       <ListFilters hasActiveFilters={hasActiveFilters} newLabel="Novo lançamento" onClear={clearFilters} onNew={() => onNavigate('novo-faturamento')}>
         <div className="col-12 col-lg-3">
           <label className="form-label" htmlFor="fat-empresa">Empresa</label>
-          <select className="form-select" id="fat-empresa" onChange={(event) => updateFilter('empresa_id', event.target.value)} value={filters.empresa_id}>
-            <option value="">Todas as empresas</option>
+          <select className="form-select" disabled={isLoadingEmpresas} id="fat-empresa" onChange={(event) => updateFilter('empresa_id', event.target.value)} value={filters.empresa_id}>
+            <option value="">{isLoadingEmpresas ? 'Carregando empresas...' : 'Todas as empresas'}</option>
             {empresas.map((empresa) => <option key={empresa.id} value={empresa.id}>{empresa.nome} — {formatCnpj(empresa.cnpj)}</option>)}
           </select>
         </div>
         <div className="col-12 col-sm-6 col-lg-3">
           <label className="form-label" htmlFor="fat-categoria">Categoria</label>
-          <select className="form-select" disabled={!filters.empresa_id} id="fat-categoria" onChange={(event) => updateFilter('categoria_id', event.target.value)} value={filters.categoria_id}>
-            <option value="">{filters.empresa_id ? 'Todas' : 'Selecione uma empresa'}</option>
+          <select className="form-select" disabled={!filters.empresa_id || isLoadingCategorias} id="fat-categoria" onChange={(event) => updateFilter('categoria_id', event.target.value)} value={filters.categoria_id}>
+            <option value="">{isLoadingCategorias ? 'Carregando categorias...' : filters.empresa_id ? 'Todas' : 'Selecione uma empresa'}</option>
             {categorias.map((categoria) => <option key={categoria.id} value={categoria.id}>{categoria.nome}</option>)}
           </select>
         </div>
@@ -145,7 +171,7 @@ function FaturamentosPage({ onNavigate }) {
             <div className="table-responsive">
               <table className="table table-hover align-middle mb-0">
                 <thead><tr><th scope="col">Data</th><th scope="col">Empresa</th><th scope="col">Categoria</th><th className="text-end" scope="col">Valor</th><th scope="col">Status</th><th className="text-end" scope="col">Ações</th></tr></thead>
-                <tbody>{lancamentos.map((item) => <tr className={item.status === 'SUBSTITUIDO' ? 'cancelled-row' : ''} key={item.id}><td className="text-nowrap">{formatDate(item.data_referencia)}</td><td className="cell-main">{item.empresa.nome}<small className="d-block text-body-secondary">{formatCnpj(item.empresa.cnpj)}</small></td><td>{item.categoria.nome}</td><td className="text-end text-nowrap">{formatCurrency(item.valor)}</td><td><StatusBadge status={item.status} /></td><td className="text-end"><button className="btn btn-link btn-table-action" type="button" onClick={() => onNavigate('faturamento-detalhes', item.id)}>Visualizar</button></td></tr>)}</tbody>
+                <tbody>{lancamentos.map((item) => <tr className={`navigable-row ${item.status === 'SUBSTITUIDO' ? 'substituted-row' : ''}`} key={item.id} onClick={() => openDetails(item.id)}><td className="text-nowrap">{formatDate(item.data_referencia)}</td><td className="cell-main">{item.empresa.nome}<small className="d-block text-body-secondary">{formatCnpj(item.empresa.cnpj)}</small></td><td>{item.categoria.nome}</td><td className="text-end text-nowrap">{formatCurrency(item.valor)}</td><td><StatusBadge status={item.status} /></td><td className="text-end"><button aria-label={`Visualizar lançamento ${item.id} de ${item.empresa.nome}`} className="btn btn-link btn-table-action" type="button" onClick={(event) => { event.stopPropagation(); openDetails(item.id) }}>Visualizar</button></td></tr>)}</tbody>
               </table>
             </div>
             {!lancamentos.length && <TableEmpty hasFilters={hasActiveFilters} noun="lançamento" onClear={clearFilters} />}

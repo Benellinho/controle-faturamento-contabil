@@ -737,6 +737,18 @@ textarea.form-control {
     color: #858b91;
 }
 
+.table-card .substituted-row td {
+    color: #858b91;
+}
+
+.table-card .navigable-row {
+    cursor: pointer;
+}
+
+.table-card .navigable-row:focus-within td {
+    background: var(--bs-table-hover-bg);
+}
+
 .status-badge {
     border: 1px solid transparent;
     border-radius: 4px;

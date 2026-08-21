@@ -43,7 +43,7 @@ const sidebarSection = {
 }
 
 function App() {
-  const [navigation, setNavigation] = useState({ page: 'dashboard', recordId: null, returnPage: null })
+  const [navigation, setNavigation] = useState({ page: 'faturamentos', recordId: null, returnPage: null })
   const CurrentPage = pages[navigation.page]
 
   function handleNavigate(page, recordId = null) {
