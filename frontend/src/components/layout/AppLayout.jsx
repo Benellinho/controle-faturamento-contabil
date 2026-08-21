@@ -16,7 +16,7 @@ function AppLayout({ children, currentPage, onNavigate }) {
       <div className="app-main">
         <header className="mobile-header d-lg-none">
           <button className="menu-button" type="button" onClick={() => setIsSidebarOpen(true)} aria-label="Abrir menu" aria-expanded={isSidebarOpen}><Icon name="menu" size={23} /></button>
-          <span className="mobile-brand">Controle de Faturamento</span>
+          <span className="mobile-brand">Lançamentos contábeis</span>
           <span className="demo-badge">DEMO</span>
         </header>
         <main className="app-content">{children}</main>

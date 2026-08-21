@@ -48,12 +48,13 @@ test('substituicao do frontend preserva original e cria historico navegavel', as
   const categoria = categorias[0]
   assert.ok(categoria)
 
-  const dataReferencia = new Date().toISOString().slice(0, 10)
+  const dataReferencia = `${new Date().toISOString().slice(0, 7)}-01`
   const original = await criarLancamento({
     empresa_id: empresa.id,
     categoria_id: categoria.id,
     data_referencia: dataReferencia,
     valor: 2000,
+    percentual_imposto: 7.25,
     observacao: originalMarker,
   })
   createdRows.push({ id: original.id, observacao: originalMarker })
@@ -62,6 +63,7 @@ test('substituicao do frontend preserva original e cria historico navegavel', as
     categoria_id: categoria.id,
     data_referencia: dataReferencia,
     valor: 2500,
+    percentual_imposto: 8,
     observacao: replacementMarker,
     motivo_substituicao: reason,
   })
@@ -85,6 +87,7 @@ test('substituicao do frontend preserva original e cria historico navegavel', as
       categoria_id: categoria.id,
       data_referencia: dataReferencia,
       valor: 3000,
+      percentual_imposto: 9,
       motivo_substituicao: 'Tentativa duplicada do teste.',
     }),
     (error) => error.status === 409,

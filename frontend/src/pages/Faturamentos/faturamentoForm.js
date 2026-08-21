@@ -16,44 +16,89 @@ function isValidIsoDate(value) {
     && date.getUTCDate() === day
 }
 
-export function createInitialLancamentoValues() {
+export function isValidTaxPercentage(value) {
+  const normalized = String(value).replace(',', '.')
+  const number = Number(normalized)
+  if (value === '' || !Number.isFinite(number) || number < 0 || number > 100) return false
+  return /^\d{1,3}(?:\.\d{1,2})?$/.test(normalized)
+}
+
+export function referenceDateFromMonth(value) {
+  return /^\d{4}-\d{2}$/.test(value) ? `${value}-01` : ''
+}
+
+export function currentMonthReferenceDate(date = new Date()) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  return `${year}-${month}-01`
+}
+
+export function createInitialLancamentoValues(date = new Date(), empresaId = null) {
+  const normalizedEmpresaId = Number(empresaId)
+
   return {
-    empresa_id: '',
-    categoria_id: '',
-    data_referencia: '',
-    valor: null,
-    observacao: '',
+    empresa_id: Number.isSafeInteger(normalizedEmpresaId) && normalizedEmpresaId > 0
+      ? String(normalizedEmpresaId)
+      : '',
+    data_referencia: currentMonthReferenceDate(date),
+    itens: [],
   }
+}
+
+export function createCategoriaItems(categorias) {
+  return categorias.map((categoria) => ({
+    categoria_id: String(categoria.id),
+    categoria_nome: categoria.nome,
+    valor: null,
+    percentual_imposto: '',
+    observacao: '',
+  }))
 }
 
 export function validateLancamentoValues(values) {
   const errors = {}
 
   if (!isPositiveSafeId(values.empresa_id)) {
-    errors.empresa_id = 'Selecione a empresa do lançamento.'
+    errors.empresa_id = 'Selecione a empresa dos lançamentos.'
   }
-  if (!isPositiveSafeId(values.categoria_id)) {
-    errors.categoria_id = 'Selecione a categoria do lançamento.'
+  if (!isValidIsoDate(values.data_referencia) || !values.data_referencia.endsWith('-01')) {
+    errors.data_referencia = 'Informe um mês de referência válido.'
   }
-  if (!isValidIsoDate(values.data_referencia)) {
-    errors.data_referencia = 'Informe uma data de referência válida.'
-  }
-  if (!Number.isSafeInteger(values.valor) || values.valor <= 0 || values.valor > MAX_VALUE_IN_CENTS) {
-    errors.valor = 'Informe um valor maior que zero e dentro do limite permitido.'
+  if (!Array.isArray(values.itens) || values.itens.length === 0) {
+    errors.itens = 'A empresa precisa possuir ao menos uma categoria cadastrada.'
+    return errors
   }
 
+  const itemErrors = {}
+  for (const item of values.itens) {
+    const current = {}
+    if (!isPositiveSafeId(item.categoria_id)) current.categoria_id = 'Categoria inválida.'
+    if (!Number.isSafeInteger(item.valor) || item.valor <= 0 || item.valor > MAX_VALUE_IN_CENTS) {
+      current.valor = 'Informe um valor maior que zero e dentro do limite permitido.'
+    }
+    if (!isValidTaxPercentage(item.percentual_imposto)) {
+      current.percentual_imposto = 'Informe um percentual entre 0 e 100, com até duas casas.'
+    }
+    if (Object.keys(current).length) itemErrors[item.categoria_id] = current
+  }
+
+  if (Object.keys(itemErrors).length) errors.itens = itemErrors
   return errors
 }
 
-export function buildLancamentoPayload(values) {
-  const observacao = values.observacao.trim()
-
+export function buildLancamentosLotePayload(values) {
   return {
     empresa_id: Number(values.empresa_id),
-    categoria_id: Number(values.categoria_id),
     data_referencia: values.data_referencia,
-    valor: values.valor / 100,
-    ...(observacao ? { observacao } : {}),
+    itens: values.itens.map((item) => {
+      const observacao = item.observacao.trim()
+      return {
+        categoria_id: Number(item.categoria_id),
+        valor: item.valor / 100,
+        percentual_imposto: Number(String(item.percentual_imposto).replace(',', '.')),
+        ...(observacao ? { observacao } : {}),
+      }
+    }),
   }
 }
 
@@ -65,7 +110,6 @@ export function createSingleFlight() {
       if (isRunning) return { executed: false }
 
       isRunning = true
-
       try {
         return { executed: true, value: await task() }
       } finally {
@@ -75,8 +119,8 @@ export function createSingleFlight() {
   }
 }
 
-export async function submitLancamentoValues(values, { createLancamento, onCreated }) {
-  const lancamento = await createLancamento(buildLancamentoPayload(values))
-  onCreated(lancamento.id)
-  return lancamento
+export async function submitLancamentoValues(values, { createLancamentos, onCreated }) {
+  const result = await createLancamentos(buildLancamentosLotePayload(values))
+  onCreated(result)
+  return result
 }

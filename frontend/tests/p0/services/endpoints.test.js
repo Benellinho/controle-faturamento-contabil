@@ -6,6 +6,7 @@ import {
 } from '../../../src/services/empresasApi.js'
 import {
   criarLancamento,
+  criarLancamentosLote,
   listarLancamentos,
   obterLancamento,
   substituirLancamento,
@@ -87,8 +88,9 @@ describe('endpoints de lancamentos', () => {
     const payload = {
       empresa_id: 1,
       categoria_id: 2,
-      data_referencia: '2026-08-21',
+      data_referencia: '2026-08-01',
       valor: 5000,
+      percentual_imposto: 7.25,
     }
 
     await criarLancamento(payload)
@@ -97,11 +99,29 @@ describe('endpoints de lancamentos', () => {
     assert.equal(requests[0].options.body, JSON.stringify(payload))
   })
 
+  test('cria todas as categorias pela rota transacional de lote', async () => {
+    const payload = {
+      empresa_id: 1,
+      data_referencia: '2026-08-01',
+      itens: [
+        { categoria_id: 2, valor: 5000, percentual_imposto: 7.25 },
+        { categoria_id: 3, valor: 1500, percentual_imposto: 3 },
+      ],
+    }
+
+    await criarLancamentosLote(payload)
+
+    assert.equal(requests[0].url, 'https://api.exemplo.test/api/lancamentos/lote')
+    assert.equal(requests[0].options.method, 'POST')
+    assert.equal(requests[0].options.body, JSON.stringify(payload))
+  })
+
   test('substitui um lancamento pela rota transacional', async () => {
     const payload = {
       categoria_id: 2,
-      data_referencia: '2026-08-21',
+      data_referencia: '2026-08-01',
       valor: 5500,
+      percentual_imposto: 7.25,
       motivo_substituicao: 'Correção do valor.',
     }
 

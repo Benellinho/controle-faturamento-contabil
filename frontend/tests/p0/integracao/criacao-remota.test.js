@@ -45,12 +45,13 @@ test('criacao do frontend aparece no detalhe e na listagem remotos', async () =>
   assert.ok(categorias.length > 0, 'A empresa escolhida deve possuir uma categoria.')
 
   const categoria = categorias[0]
-  const dataReferencia = new Date().toISOString().slice(0, 10)
+  const dataReferencia = `${new Date().toISOString().slice(0, 7)}-01`
   const created = await criarLancamento({
     empresa_id: empresa.id,
     categoria_id: categoria.id,
     data_referencia: dataReferencia,
     valor: 1234.5,
+    percentual_imposto: 7.25,
     observacao: marker,
   })
   createdId = created.id

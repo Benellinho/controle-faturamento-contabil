@@ -36,7 +36,7 @@ describe('filtros da listagem de lancamentos P0', () => {
     const filters = {
       empresa_id: '2',
       categoria_id: '20',
-      data: '2026-08-21',
+      data: '2026-08-01',
       status: '',
     }
 
@@ -50,7 +50,7 @@ describe('filtros da listagem de lancamentos P0', () => {
     assert.equal(hasActiveLancamentosFilters(createInitialFilters()), false)
     assert.equal(hasActiveLancamentosFilters({
       ...createInitialFilters(),
-      data: '2026-08-21',
+      data: '2026-08-01',
     }), true)
   })
 

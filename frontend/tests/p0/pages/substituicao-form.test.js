@@ -13,8 +13,9 @@ const lancamento = {
   id: 31,
   empresa: { id: 1, nome: 'Empresa Exemplo', cnpj: '11222333000181' },
   categoria: { id: 2, nome: 'Vendas' },
-  data_referencia: '2026-08-21',
+  data_referencia: '2026-08-01',
   valor: 5000,
+  percentual_imposto: 7.25,
   observacao: 'Valor original.',
 }
 
@@ -23,8 +24,9 @@ describe('regras do formulario de substituicao', () => {
     assert.deepEqual(createSubstituicaoValues(lancamento), {
       empresa_id: '1',
       categoria_id: '2',
-      data_referencia: '2026-08-21',
+      data_referencia: '2026-08-01',
       valor: 500_000,
+      percentual_imposto: '7.25',
       observacao: 'Valor original.',
       motivo_substituicao: '',
     })
@@ -41,16 +43,18 @@ describe('regras do formulario de substituicao', () => {
     const values = {
       ...createSubstituicaoValues(lancamento),
       categoria_id: '3',
-      data_referencia: '2026-08-22',
+      data_referencia: '2026-09-01',
       valor: 550_000,
+      percentual_imposto: '8.12',
       observacao: '  Valor corrigido. ',
       motivo_substituicao: '  Correção do valor. ',
     }
 
     assert.deepEqual(buildSubstituicaoPayload(values), {
       categoria_id: 3,
-      data_referencia: '2026-08-22',
+      data_referencia: '2026-09-01',
       valor: 5500,
+      percentual_imposto: 8.12,
       observacao: 'Valor corrigido.',
       motivo_substituicao: 'Correção do valor.',
     })

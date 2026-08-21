@@ -1,15 +1,6 @@
 import Icon from '../common/Icon'
 import PaletteSwitcher from './PaletteSwitcher'
-
-const navigation = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { id: 'controle', label: 'Controle de faturamento', icon: 'control' },
-  { id: 'empresas', label: 'Empresas', icon: 'companies' },
-  { id: 'usuarios', label: 'Usuários', icon: 'users' },
-  { id: 'faturamentos', label: 'Faturamentos', icon: 'billing' },
-  { id: 'categorias', label: 'Categorias', icon: 'categories' },
-  { id: 'historico', label: 'Histórico de cancelamentos', icon: 'history' },
-]
+import { p0Navigation } from './p0Navigation'
 
 function Sidebar({ activePage, isOpen, onClose, onNavigate }) {
   function handleNavigation(page) {
@@ -22,14 +13,15 @@ function Sidebar({ activePage, isOpen, onClose, onNavigate }) {
       <aside className={`app-sidebar ${isOpen ? 'is-open' : ''}`} aria-label="Navegação principal">
         <div className="sidebar-brand">
           <span className="brand-mark" aria-hidden="true">CF</span>
-          <span><strong>Controle</strong><small>Faturamento contábil</small></span>
+          <span><strong>Controle</strong><small>Lançamentos contábeis</small></span>
           <button className="sidebar-close d-lg-none" type="button" onClick={onClose} aria-label="Fechar menu"><Icon name="close" size={22} /></button>
         </div>
         <nav className="sidebar-nav">
           <span className="sidebar-label">Menu principal</span>
-          {navigation.map((item) => (
+          {p0Navigation.map((item) => (
             <button
               className={`sidebar-link ${activePage === item.id ? 'active' : ''}`}
+              aria-current={activePage === item.id ? 'page' : undefined}
               key={item.label}
               onClick={() => handleNavigation(item.id)}
               type="button"
@@ -39,10 +31,9 @@ function Sidebar({ activePage, isOpen, onClose, onNavigate }) {
           ))}
         </nav>
         <PaletteSwitcher />
-        <div className="sidebar-user">
-          <div className="user-avatar" aria-hidden="true">MB</div>
-          <div className="user-details"><strong>Mariana Barros</strong><span>Contadora</span></div>
-          <button className="logout-button" type="button" aria-label="Sair"><Icon name="logout" size={19} /></button>
+        <div className="sidebar-scope">
+          <strong>Protótipo P0</strong>
+          <span>Empresas e categorias são pré-cadastradas.</span>
         </div>
       </aside>
       {isOpen && <button className="sidebar-backdrop d-lg-none" type="button" onClick={onClose} aria-label="Fechar menu" />}

@@ -5,20 +5,13 @@ import DetailSection from '../../components/details/DetailSection'
 import RecordNotFound from '../../components/details/RecordNotFound'
 import StatusBadge from '../../components/table/StatusBadge'
 import { obterLancamento } from '../../services/lancamentosApi'
-import { formatCnpj, formatCurrency, formatDate, formatDateTime } from '../../utils/formatters'
+import { formatCnpj, formatCurrency, formatDateTime, formatPercentage, formatReferenceMonth, formatTaxAmount } from '../../utils/formatters'
 
-const returnLabels = {
-  controle: 'Voltar para controle de faturamento',
-  historico: 'Voltar para histórico',
-  faturamentos: 'Voltar para lançamentos',
-}
-
-function FaturamentoDetails({ onNavigate, recordId, returnPage = 'faturamentos' }) {
+function FaturamentoDetails({ onNavigate, recordId }) {
   const [lancamento, setLancamento] = useState(null)
   const [error, setError] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [reloadKey, setReloadKey] = useState(0)
-  const backPage = returnLabels[returnPage] ? returnPage : 'faturamentos'
 
   useEffect(() => {
     const controller = new AbortController()
@@ -40,7 +33,7 @@ function FaturamentoDetails({ onNavigate, recordId, returnPage = 'faturamentos' 
   }, [recordId, reloadKey])
 
   if (!recordId) {
-    return <RecordNotFound label="Lançamento" onBack={() => onNavigate(backPage)} />
+    return <RecordNotFound label="Lançamento" onBack={() => onNavigate('faturamentos')} />
   }
 
   if (isLoading) {
@@ -52,13 +45,13 @@ function FaturamentoDetails({ onNavigate, recordId, returnPage = 'faturamentos' 
   }
 
   if (error?.status === 404) {
-    return <RecordNotFound label="Lançamento" onBack={() => onNavigate(backPage)} />
+    return <RecordNotFound label="Lançamento" onBack={() => onNavigate('faturamentos')} />
   }
 
   if (error) {
     return (
       <div className="detail-page">
-        <DetailPageHeader backLabel={returnLabels[backPage]} eyebrow="Lançamento" onBack={() => onNavigate(backPage)} title="Falha ao carregar" />
+        <DetailPageHeader backLabel="Voltar para lançamentos" eyebrow="Lançamento" onBack={() => onNavigate('faturamentos')} title="Falha ao carregar" />
         <div className="alert alert-danger" role="alert">
           <p className="mb-2">{error.message}</p>
           <button className="btn btn-outline-danger btn-sm" type="button" onClick={() => { setIsLoading(true); setError(null); setReloadKey((value) => value + 1) }}>Tentar novamente</button>
@@ -80,10 +73,10 @@ function FaturamentoDetails({ onNavigate, recordId, returnPage = 'faturamentos' 
             )}
           </>
         )}
-        backLabel={returnLabels[backPage]}
+        backLabel="Voltar para lançamentos"
         eyebrow="Lançamento"
-        onBack={() => onNavigate(backPage)}
-        subtitle={`Data de referência ${formatDate(lancamento.data_referencia)}`}
+        onBack={() => onNavigate('faturamentos')}
+        subtitle={`Competência ${formatReferenceMonth(lancamento.data_referencia)}`}
         title={lancamento.empresa.nome}
       />
 
@@ -91,8 +84,10 @@ function FaturamentoDetails({ onNavigate, recordId, returnPage = 'faturamentos' 
         <DetailItem label="Empresa" value={lancamento.empresa.nome} />
         <DetailItem label="CNPJ" value={formatCnpj(lancamento.empresa.cnpj)} />
         <DetailItem label="Categoria" value={lancamento.categoria.nome} />
-        <DetailItem label="Data de referência" value={formatDate(lancamento.data_referencia)} />
+        <DetailItem label="Competência" value={formatReferenceMonth(lancamento.data_referencia)} />
         <DetailItem className="col-12 col-md-6 detail-highlight" label="Valor do lançamento" value={formatCurrency(lancamento.valor)} />
+        <DetailItem label="Percentual de imposto" value={formatPercentage(lancamento.percentual_imposto)} />
+        <DetailItem label="Valor calculado do imposto" value={formatTaxAmount(lancamento.valor, lancamento.percentual_imposto)} />
         <DetailItem className="col-12" label="Observação" value={lancamento.observacao || '—'} />
       </DetailSection>
 

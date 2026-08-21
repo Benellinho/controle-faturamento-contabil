@@ -1,5 +1,4 @@
 import {
-  buildLancamentoPayload,
   validateLancamentoValues,
 } from './faturamentoForm.js'
 
@@ -9,13 +8,27 @@ export function createSubstituicaoValues(lancamento) {
     categoria_id: String(lancamento.categoria.id),
     data_referencia: lancamento.data_referencia,
     valor: Math.round(Number(lancamento.valor) * 100),
+    percentual_imposto: String(lancamento.percentual_imposto),
     observacao: lancamento.observacao ?? '',
     motivo_substituicao: '',
   }
 }
 
 export function validateSubstituicaoValues(values) {
-  const errors = validateLancamentoValues(values)
+  const batchErrors = validateLancamentoValues({
+    empresa_id: values.empresa_id,
+    data_referencia: values.data_referencia,
+    itens: [{
+      categoria_id: values.categoria_id,
+      valor: values.valor,
+      percentual_imposto: values.percentual_imposto,
+    }],
+  })
+  const errors = {
+    ...(batchErrors.empresa_id ? { empresa_id: batchErrors.empresa_id } : {}),
+    ...(batchErrors.data_referencia ? { data_referencia: batchErrors.data_referencia } : {}),
+    ...(batchErrors.itens?.[values.categoria_id] ?? {}),
+  }
 
   if (!values.motivo_substituicao.trim()) {
     errors.motivo_substituicao = 'Informe o motivo da substituição.'
@@ -25,13 +38,14 @@ export function validateSubstituicaoValues(values) {
 }
 
 export function buildSubstituicaoPayload(values) {
-  const payload = buildLancamentoPayload(values)
+  const observacao = values.observacao.trim()
 
   return {
-    categoria_id: payload.categoria_id,
-    data_referencia: payload.data_referencia,
-    valor: payload.valor,
-    ...(payload.observacao ? { observacao: payload.observacao } : {}),
+    categoria_id: Number(values.categoria_id),
+    data_referencia: values.data_referencia,
+    valor: values.valor / 100,
+    percentual_imposto: Number(String(values.percentual_imposto).replace(',', '.')),
+    ...(observacao ? { observacao } : {}),
     motivo_substituicao: values.motivo_substituicao.trim(),
   }
 }

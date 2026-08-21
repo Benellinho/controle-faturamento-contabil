@@ -32,6 +32,14 @@ export function criarLancamento(payload, options = {}) {
   })
 }
 
+export function criarLancamentosLote(payload, options = {}) {
+  return apiRequest('/api/lancamentos/lote', {
+    ...options,
+    method: 'POST',
+    body: payload,
+  })
+}
+
 export function substituirLancamento(id, payload, options = {}) {
   return apiRequest(`/api/lancamentos/${encodeURIComponent(id)}/substituir`, {
     ...options,

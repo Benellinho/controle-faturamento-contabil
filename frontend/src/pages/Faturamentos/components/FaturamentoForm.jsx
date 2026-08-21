@@ -3,30 +3,32 @@ import ConfirmModal from '../../../components/common/ConfirmModal'
 import FormActions from '../../../components/forms/FormActions'
 import FormFeedback from '../../../components/forms/FormFeedback'
 import MoneyInput from '../../../components/forms/MoneyInput'
+import PercentageInput from '../../../components/forms/PercentageInput'
 import { listarCategorias, listarEmpresas } from '../../../services/empresasApi'
-import { criarLancamento } from '../../../services/lancamentosApi'
-import { formatCnpj, formatCurrencyFromCents, formatDate } from '../../../utils/formatters'
+import { criarLancamentosLote } from '../../../services/lancamentosApi'
+import { formatCnpj, formatCurrencyFromCents, formatReferenceMonth } from '../../../utils/formatters'
 import {
+  createCategoriaItems,
   createInitialLancamentoValues,
   createSingleFlight,
+  referenceDateFromMonth,
   submitLancamentoValues,
   validateLancamentoValues,
 } from '../faturamentoForm'
 
-function FaturamentoForm({ onCancel, onCreated }) {
-  const [values, setValues] = useState(createInitialLancamentoValues)
+function FaturamentoForm({ initialEmpresaId, onCancel, onCreated }) {
+  const [values, setValues] = useState(() => createInitialLancamentoValues(new Date(), initialEmpresaId))
   const [empresas, setEmpresas] = useState([])
-  const [categorias, setCategorias] = useState([])
   const [errors, setErrors] = useState({})
   const [apiError, setApiError] = useState('')
   const [isLoadingEmpresas, setIsLoadingEmpresas] = useState(true)
-  const [isLoadingCategorias, setIsLoadingCategorias] = useState(false)
+  const [isLoadingCategorias, setIsLoadingCategorias] = useState(Boolean(values.empresa_id))
+  const [hasLoadedCategorias, setHasLoadedCategorias] = useState(false)
   const [isReviewOpen, setIsReviewOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const submission = useRef(createSingleFlight())
 
   const selectedEmpresa = empresas.find((item) => item.id === Number(values.empresa_id))
-  const selectedCategoria = categorias.find((item) => item.id === Number(values.categoria_id))
 
   useEffect(() => {
     const controller = new AbortController()
@@ -46,14 +48,21 @@ function FaturamentoForm({ onCancel, onCreated }) {
   useEffect(() => {
     const controller = new AbortController()
 
-    if (!values.empresa_id) {
-      return () => controller.abort()
-    }
+    if (!values.empresa_id) return () => controller.abort()
 
     listarCategorias(values.empresa_id, { signal: controller.signal })
-      .then(setCategorias)
+      .then((categorias) => {
+        if (!controller.signal.aborted) {
+          setValues((current) => ({ ...current, itens: createCategoriaItems(categorias) }))
+          setHasLoadedCategorias(true)
+          setApiError('')
+        }
+      })
       .catch((error) => {
-        if (!controller.signal.aborted) setApiError(error.message)
+        if (!controller.signal.aborted) {
+          setHasLoadedCategorias(false)
+          setApiError(error.message)
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) setIsLoadingCategorias(false)
@@ -64,36 +73,34 @@ function FaturamentoForm({ onCancel, onCreated }) {
 
   function updateField(field, value) {
     setValues((current) => ({ ...current, [field]: value }))
-    setErrors((current) => ({ ...current, [field]: '' }))
+    setErrors({})
+    setApiError('')
+  }
+
+  function updateItem(categoriaId, field, value) {
+    setValues((current) => ({
+      ...current,
+      itens: current.itens.map((item) => (
+        item.categoria_id === categoriaId ? { ...item, [field]: value } : item
+      )),
+    }))
+    setErrors({})
     setApiError('')
   }
 
   function handleEmpresaChange(empresaId) {
-    setCategorias([])
     setIsLoadingCategorias(Boolean(empresaId))
-    setValues((current) => ({
-      ...current,
-      empresa_id: empresaId,
-      categoria_id: '',
-    }))
-    setErrors((current) => ({
-      ...current,
-      empresa_id: '',
-      categoria_id: '',
-    }))
+    setHasLoadedCategorias(false)
+    setValues((current) => ({ ...current, empresa_id: empresaId, itens: [] }))
+    setErrors({})
     setApiError('')
-  }
-
-  function validate() {
-    const nextErrors = validateLancamentoValues(values)
-
-    setErrors(nextErrors)
-    return Object.keys(nextErrors).length === 0
   }
 
   function handleReview(event) {
     event.preventDefault()
-    if (validate()) setIsReviewOpen(true)
+    const nextErrors = validateLancamentoValues(values)
+    setErrors(nextErrors)
+    if (!Object.keys(nextErrors).length) setIsReviewOpen(true)
   }
 
   async function handleConfirm() {
@@ -103,7 +110,7 @@ function FaturamentoForm({ onCancel, onCreated }) {
 
       try {
         await submitLancamentoValues(values, {
-          createLancamento: criarLancamento,
+          createLancamentos: criarLancamentosLote,
           onCreated,
         })
         setIsReviewOpen(false)
@@ -122,11 +129,11 @@ function FaturamentoForm({ onCancel, onCreated }) {
       <form noValidate onSubmit={handleReview}>
         <FormFeedback message={apiError} type="danger" />
 
-        <fieldset className="form-section">
-          <legend>Identificação</legend>
-          <p className="form-section-description">Selecione a empresa e uma categoria pertencente a ela.</p>
+        <fieldset className="form-section" disabled={isSubmitting}>
+          <legend>Identificação do lote</legend>
+          <p className="form-section-description">Escolha a empresa e a data comum a todos os lançamentos.</p>
           <div className="row g-3">
-            <div className="col-12">
+            <div className="col-12 col-md-7">
               <label className="form-label" htmlFor="faturamento-empresa">Empresa <span className="required-mark">*</span></label>
               <select className={`form-select ${errors.empresa_id ? 'is-invalid' : ''}`} disabled={isLoadingEmpresas} id="faturamento-empresa" onChange={(event) => handleEmpresaChange(event.target.value)} value={values.empresa_id}>
                 <option value="">{isLoadingEmpresas ? 'Carregando empresas...' : 'Selecione uma empresa'}</option>
@@ -134,51 +141,72 @@ function FaturamentoForm({ onCancel, onCreated }) {
               </select>
               {errors.empresa_id && <div className="invalid-feedback">{errors.empresa_id}</div>}
             </div>
-            <div className="col-12">
-              <label className="form-label" htmlFor="faturamento-categoria">Categoria <span className="required-mark">*</span></label>
-              <select className={`form-select ${errors.categoria_id ? 'is-invalid' : ''}`} disabled={!values.empresa_id || isLoadingCategorias} id="faturamento-categoria" onChange={(event) => updateField('categoria_id', event.target.value)} value={values.categoria_id}>
-                <option value="">{isLoadingCategorias ? 'Carregando categorias...' : values.empresa_id ? 'Selecione uma categoria' : 'Selecione primeiro a empresa'}</option>
-                {categorias.map((categoria) => <option key={categoria.id} value={categoria.id}>{categoria.nome}</option>)}
-              </select>
-              {errors.categoria_id && <div className="invalid-feedback">{errors.categoria_id}</div>}
-            </div>
-          </div>
-        </fieldset>
-
-        <fieldset className="form-section">
-          <legend>Dados do lançamento</legend>
-          <div className="row g-3">
-            <div className="col-12 col-md-6">
-              <label className="form-label" htmlFor="faturamento-data">Data de referência <span className="required-mark">*</span></label>
-              <input className={`form-control ${errors.data_referencia ? 'is-invalid' : ''}`} id="faturamento-data" onChange={(event) => updateField('data_referencia', event.target.value)} type="date" value={values.data_referencia} />
+            <div className="col-12 col-md-5">
+              <label className="form-label" htmlFor="faturamento-data">Mês de referência <span className="required-mark">*</span></label>
+              <input className={`form-control ${errors.data_referencia ? 'is-invalid' : ''}`} id="faturamento-data" onChange={(event) => updateField('data_referencia', referenceDateFromMonth(event.target.value))} type="month" value={values.data_referencia.slice(0, 7)} />
               {errors.data_referencia && <div className="invalid-feedback">{errors.data_referencia}</div>}
             </div>
-            <div className="col-12 col-md-6">
-              <label className="form-label" htmlFor="faturamento-valor">Valor <span className="required-mark">*</span></label>
-              <MoneyInput id="faturamento-valor" invalid={Boolean(errors.valor)} onChange={(value) => updateField('valor', value)} placeholder="R$ 0,00" value={values.valor} />
-              {errors.valor && <div className="invalid-feedback">{errors.valor}</div>}
-            </div>
-            <div className="col-12">
-              <label className="form-label" htmlFor="faturamento-observacao">Observação <span className="optional-label">Opcional</span></label>
-              <textarea className="form-control" id="faturamento-observacao" onChange={(event) => updateField('observacao', event.target.value)} placeholder="Inclua uma informação relevante sobre este lançamento" rows="4" value={values.observacao} />
-            </div>
           </div>
         </fieldset>
 
-        <FormActions isSubmitting={isSubmitting} onCancel={onCancel} submitLabel="Revisar lançamento" submittingLabel="Confirmando..." />
+        <fieldset className="form-section" disabled={isSubmitting || isLoadingCategorias || !values.empresa_id}>
+          <legend>Categorias da empresa</legend>
+          <p className="form-section-description">Preencha valor e percentual de imposto para todas as categorias. O imposto é calculado automaticamente e não é armazenado.</p>
+
+          {isLoadingCategorias && <div className="p-3 text-center" role="status"><span className="spinner-border spinner-border-sm" aria-hidden="true" /> Carregando categorias...</div>}
+          {hasLoadedCategorias && !isLoadingCategorias && values.empresa_id && values.itens.length === 0 && <div className="alert alert-warning">Esta empresa não possui categorias cadastradas.</div>}
+          {typeof errors.itens === 'string' && <div className="alert alert-danger">{errors.itens}</div>}
+
+          <div className="category-entry-list">
+            {values.itens.map((item) => {
+              const itemErrors = errors.itens?.[item.categoria_id] ?? {}
+              const percentage = Number(String(item.percentual_imposto).replace(',', '.')) || 0
+              const taxInCents = Math.round((item.valor ?? 0) * percentage / 100)
+
+              return (
+                <article className="category-entry" key={item.categoria_id}>
+                  <h3>{item.categoria_nome}</h3>
+                  <div className="row g-3">
+                    <div className="col-12 col-md-7">
+                      <label className="form-label" htmlFor={`categoria-${item.categoria_id}-valor`}>Valor <span className="required-mark">*</span></label>
+                      <MoneyInput id={`categoria-${item.categoria_id}-valor`} invalid={Boolean(itemErrors.valor)} onChange={(value) => updateItem(item.categoria_id, 'valor', value)} value={item.valor} />
+                      {itemErrors.valor && <div className="invalid-feedback">{itemErrors.valor}</div>}
+                    </div>
+                    <div className="col-12 col-md-5">
+                      <label className="form-label" htmlFor={`categoria-${item.categoria_id}-imposto`}>% de imposto <span className="required-mark">*</span></label>
+                      <div className="input-group">
+                        <PercentageInput id={`categoria-${item.categoria_id}-imposto`} invalid={Boolean(itemErrors.percentual_imposto)} onChange={(value) => updateItem(item.categoria_id, 'percentual_imposto', value)} value={item.percentual_imposto} />
+                        <span className="input-group-text">%</span>
+                        {itemErrors.percentual_imposto && <div className="invalid-feedback">{itemErrors.percentual_imposto}</div>}
+                      </div>
+                      <div className="form-text">Imposto: {formatCurrencyFromCents(taxInCents)}</div>
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label" htmlFor={`categoria-${item.categoria_id}-observacao`}>Observação <span className="optional-label">Opcional</span></label>
+                      <input className="form-control" id={`categoria-${item.categoria_id}-observacao`} onChange={(event) => updateItem(item.categoria_id, 'observacao', event.target.value)} type="text" value={item.observacao} />
+                    </div>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        </fieldset>
+
+        <FormActions isSubmitting={isSubmitting} onCancel={onCancel} submitLabel="Revisar todos os lançamentos" submittingLabel="Confirmando..." />
       </form>
 
-      <ConfirmModal confirmLabel="Confirmar lançamento" isOpen={isReviewOpen} isSubmitting={isSubmitting} onClose={() => setIsReviewOpen(false)} onConfirm={handleConfirm} title="Confirmar lançamento">
-        <dl className="review-list">
-          <div><dt>Empresa</dt><dd>{selectedEmpresa?.nome} — {selectedEmpresa && formatCnpj(selectedEmpresa.cnpj)}</dd></div>
-          <div><dt>Categoria</dt><dd>{selectedCategoria?.nome}</dd></div>
-          <div><dt>Data de referência</dt><dd>{formatDate(values.data_referencia)}</dd></div>
-          <div><dt>Valor</dt><dd>{formatCurrencyFromCents(values.valor)}</dd></div>
-          <div><dt>Observação</dt><dd>{values.observacao.trim() || '—'}</dd></div>
-        </dl>
-        <div className="alert alert-warning mb-0" role="note">
-          Após confirmado, este lançamento não poderá ser editado. Uma correção exigirá substituição.
+      <ConfirmModal confirmLabel="Confirmar todos" isOpen={isReviewOpen} isSubmitting={isSubmitting} onClose={() => setIsReviewOpen(false)} onConfirm={handleConfirm} title="Confirmar lançamentos">
+        <p><strong>{selectedEmpresa?.nome}</strong><br />Mês de referência: {formatReferenceMonth(values.data_referencia)}</p>
+        <div className="table-responsive">
+          <table className="table table-sm align-middle mb-0">
+            <thead><tr><th>Categoria</th><th className="text-end">Valor</th><th className="text-end">Imposto</th></tr></thead>
+            <tbody>{values.itens.map((item) => {
+              const percentage = Number(String(item.percentual_imposto).replace(',', '.')) || 0
+              return <tr key={item.categoria_id}><td>{item.categoria_nome}<small className="d-block text-body-secondary">{percentage.toLocaleString('pt-BR')}%</small></td><td className="text-end">{formatCurrencyFromCents(item.valor)}</td><td className="text-end">{formatCurrencyFromCents(Math.round(item.valor * percentage / 100))}</td></tr>
+            })}</tbody>
+          </table>
         </div>
+        <div className="alert alert-warning mt-3 mb-0" role="note">Após confirmados, os lançamentos não poderão ser editados. Correções exigirão substituição individual.</div>
       </ConfirmModal>
     </>
   )

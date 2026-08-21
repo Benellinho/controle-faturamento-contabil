@@ -4,12 +4,13 @@ import RecordNotFound from '../../components/details/RecordNotFound'
 import FormActions from '../../components/forms/FormActions'
 import FormFeedback from '../../components/forms/FormFeedback'
 import MoneyInput from '../../components/forms/MoneyInput'
+import PercentageInput from '../../components/forms/PercentageInput'
 import PageHeader from '../../components/layout/PageHeader'
 import StatusBadge from '../../components/table/StatusBadge'
 import { listarCategorias } from '../../services/empresasApi'
 import { obterLancamento, substituirLancamento } from '../../services/lancamentosApi'
-import { formatCnpj, formatCurrencyFromCents, formatDate } from '../../utils/formatters'
-import { createSingleFlight } from './faturamentoForm'
+import { formatCnpj, formatCurrencyFromCents, formatPercentage, formatReferenceMonth } from '../../utils/formatters'
+import { createSingleFlight, referenceDateFromMonth } from './faturamentoForm'
 import {
   createSubstituicaoValues,
   replacementErrorMessage,
@@ -209,14 +210,22 @@ function SubstituirFaturamento({ onNavigate, recordId }) {
               <legend>Dados corrigidos</legend>
               <div className="row g-3">
                 <div className="col-12 col-md-6">
-                  <label className="form-label" htmlFor="substituicao-data">Data de referência <span className="required-mark">*</span></label>
-                  <input className={`form-control ${errors.data_referencia ? 'is-invalid' : ''}`} id="substituicao-data" onChange={(event) => updateField('data_referencia', event.target.value)} type="date" value={values.data_referencia} />
+                  <label className="form-label" htmlFor="substituicao-data">Mês de referência <span className="required-mark">*</span></label>
+                  <input className={`form-control ${errors.data_referencia ? 'is-invalid' : ''}`} id="substituicao-data" onChange={(event) => updateField('data_referencia', referenceDateFromMonth(event.target.value))} type="month" value={values.data_referencia.slice(0, 7)} />
                   {errors.data_referencia && <div className="invalid-feedback">{errors.data_referencia}</div>}
                 </div>
                 <div className="col-12 col-md-6">
                   <label className="form-label" htmlFor="substituicao-valor">Valor <span className="required-mark">*</span></label>
                   <MoneyInput id="substituicao-valor" invalid={Boolean(errors.valor)} onChange={(value) => updateField('valor', value)} value={values.valor} />
                   {errors.valor && <div className="invalid-feedback">{errors.valor}</div>}
+                </div>
+                <div className="col-12 col-md-6">
+                  <label className="form-label" htmlFor="substituicao-imposto">% de imposto <span className="required-mark">*</span></label>
+                  <div className="input-group">
+                    <PercentageInput id="substituicao-imposto" invalid={Boolean(errors.percentual_imposto)} onChange={(value) => updateField('percentual_imposto', value)} value={values.percentual_imposto} />
+                    <span className="input-group-text">%</span>
+                    {errors.percentual_imposto && <div className="invalid-feedback">{errors.percentual_imposto}</div>}
+                  </div>
                 </div>
                 <div className="col-12">
                   <label className="form-label" htmlFor="substituicao-observacao">Observação <span className="optional-label">Opcional</span></label>
@@ -239,8 +248,9 @@ function SubstituirFaturamento({ onNavigate, recordId }) {
         <dl className="review-list">
           <div><dt>Empresa</dt><dd>{lancamento.empresa.nome}</dd></div>
           <div><dt>Categoria</dt><dd>{selectedCategoria?.nome}</dd></div>
-          <div><dt>Data de referência</dt><dd>{formatDate(values.data_referencia)}</dd></div>
+          <div><dt>Mês de referência</dt><dd>{formatReferenceMonth(values.data_referencia)}</dd></div>
           <div><dt>Novo valor</dt><dd>{formatCurrencyFromCents(values.valor)}</dd></div>
+          <div><dt>Percentual de imposto</dt><dd>{formatPercentage(values.percentual_imposto)}</dd></div>
           <div><dt>Observação</dt><dd>{values.observacao.trim() || '—'}</dd></div>
           <div><dt>Motivo</dt><dd>{values.motivo_substituicao.trim()}</dd></div>
         </dl>

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
+import Icon from '../../components/common/Icon'
 import PageHeader from '../../components/layout/PageHeader'
 import ListFilters from '../../components/table/ListFilters'
 import StatusBadge from '../../components/table/StatusBadge'
 import TableEmpty from '../../components/table/TableEmpty'
 import { listarCategorias, listarEmpresas } from '../../services/empresasApi'
 import { listarLancamentos } from '../../services/lancamentosApi'
-import { formatCnpj, formatCurrency, formatDate } from '../../utils/formatters'
+import { formatCnpj, formatCurrency, formatPercentage, formatReferenceMonth, formatTaxAmount } from '../../utils/formatters'
+import { referenceDateFromMonth } from './faturamentoForm'
 import {
   createInitialFilters,
   hasActiveLancamentosFilters,
@@ -121,7 +123,11 @@ function FaturamentosPage({ onNavigate }) {
 
   return (
     <div className="list-page">
-      <PageHeader title="Lançamentos" description="Consulte os lançamentos ativos e substituídos." />
+      <PageHeader
+        action={<button className="btn btn-primary" type="button" onClick={() => onNavigate('novo-faturamento', null, { empresaId: filters.empresa_id })}>Lançar categorias <Icon name="arrow" size={17} /></button>}
+        title="Lançamentos"
+        description="Consulte os lançamentos ativos e substituídos."
+      />
 
       {(catalogError || errorMessage) && (
         <div className="alert alert-danger" role="alert">
@@ -130,7 +136,7 @@ function FaturamentosPage({ onNavigate }) {
         </div>
       )}
 
-      <ListFilters hasActiveFilters={hasActiveFilters} newLabel="Novo lançamento" onClear={clearFilters} onNew={() => onNavigate('novo-faturamento')}>
+      <ListFilters hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
         <div className="col-12 col-lg-3">
           <label className="form-label" htmlFor="fat-empresa">Empresa</label>
           <select className="form-select" disabled={isLoadingEmpresas} id="fat-empresa" onChange={(event) => updateFilter('empresa_id', event.target.value)} value={filters.empresa_id}>
@@ -146,8 +152,8 @@ function FaturamentosPage({ onNavigate }) {
           </select>
         </div>
         <div className="col-12 col-sm-6 col-lg-3">
-          <label className="form-label" htmlFor="fat-data">Data</label>
-          <input className="form-control" id="fat-data" onChange={(event) => updateFilter('data', event.target.value)} type="date" value={filters.data} />
+          <label className="form-label" htmlFor="fat-data">Mês</label>
+          <input className="form-control" id="fat-data" onChange={(event) => updateFilter('data', referenceDateFromMonth(event.target.value))} type="month" value={filters.data.slice(0, 7)} />
         </div>
         <div className="col-12 col-lg-3">
           <label className="form-label" htmlFor="fat-status">Status</label>
@@ -170,8 +176,8 @@ function FaturamentosPage({ onNavigate }) {
           <>
             <div className="table-responsive">
               <table className="table table-hover align-middle mb-0">
-                <thead><tr><th scope="col">Data</th><th scope="col">Empresa</th><th scope="col">Categoria</th><th className="text-end" scope="col">Valor</th><th scope="col">Status</th><th className="text-end" scope="col">Ações</th></tr></thead>
-                <tbody>{lancamentos.map((item) => <tr className={`navigable-row ${item.status === 'SUBSTITUIDO' ? 'substituted-row' : ''}`} key={item.id} onClick={() => openDetails(item.id)}><td className="text-nowrap">{formatDate(item.data_referencia)}</td><td className="cell-main">{item.empresa.nome}<small className="d-block text-body-secondary">{formatCnpj(item.empresa.cnpj)}</small></td><td>{item.categoria.nome}</td><td className="text-end text-nowrap">{formatCurrency(item.valor)}</td><td><StatusBadge status={item.status} /></td><td className="text-end"><button aria-label={`Visualizar lançamento ${item.id} de ${item.empresa.nome}`} className="btn btn-link btn-table-action" type="button" onClick={(event) => { event.stopPropagation(); openDetails(item.id) }}>Visualizar</button></td></tr>)}</tbody>
+                <thead><tr><th scope="col">Competência</th><th scope="col">Empresa</th><th scope="col">Categoria</th><th className="text-end" scope="col">Valor</th><th scope="col">Status</th><th className="text-end" scope="col">Ações</th></tr></thead>
+                <tbody>{lancamentos.map((item) => <tr className={`navigable-row ${item.status === 'SUBSTITUIDO' ? 'substituted-row' : ''}`} key={item.id} onClick={() => openDetails(item.id)}><td className="text-nowrap">{formatReferenceMonth(item.data_referencia)}</td><td className="cell-main">{item.empresa.nome}<small className="d-block text-body-secondary">{formatCnpj(item.empresa.cnpj)}</small></td><td>{item.categoria.nome}</td><td className="text-end text-nowrap">{formatCurrency(item.valor)}<small className="d-block text-body-secondary">{formatPercentage(item.percentual_imposto)} · {formatTaxAmount(item.valor, item.percentual_imposto)}</small></td><td><StatusBadge status={item.status} /></td><td className="text-end"><button aria-label={`Visualizar lançamento ${item.id} de ${item.empresa.nome}`} className="btn btn-link btn-table-action" type="button" onClick={(event) => { event.stopPropagation(); openDetails(item.id) }}>Visualizar</button></td></tr>)}</tbody>
               </table>
             </div>
             {!lancamentos.length && <TableEmpty hasFilters={hasActiveFilters} noun="lançamento" onClear={clearFilters} />}
