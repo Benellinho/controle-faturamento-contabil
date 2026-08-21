@@ -339,6 +339,6 @@ Também ficam fora do P0 paginação, ordenação configurável, busca textual, 
 - [x] Rejeitar categoria de outra empresa.
 - [x] Rejeitar valor igual ou menor que zero.
 - [ ] Substituir um lançamento dentro de transação.
-- [ ] Exigir motivo de substituição.
-- [ ] Rejeitar substituição de lançamento já substituído.
+- [x] Exigir motivo de substituição.
+- [x] Rejeitar substituição de lançamento já substituído.
 - [ ] Confirmar rollback quando a substituição falhar.

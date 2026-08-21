@@ -199,19 +199,21 @@ Evidências:
 
 Objetivo: corrigir dados sem editar ou excluir o original.
 
+**Estado atual:** implementação concluída no repositório. A migration da RPC ainda precisa ser aplicada no Supabase remoto para executar a validação transacional integrada.
+
 Passos:
 
-1. implementar `POST /api/lancamentos/:id/substituir`;
-2. buscar o original e exigir status `ATIVO`;
-3. manter obrigatoriamente a empresa do registro original;
-4. validar a nova categoria, data, valor e motivo;
-5. iniciar uma transação no PostgreSQL;
-6. criar o substituto `ATIVO` apontando para o original;
-7. alterar o original para `SUBSTITUIDO` apenas se ele ainda estiver `ATIVO`;
-8. confirmar que exatamente um original foi atualizado;
-9. desfazer integralmente a operação em qualquer falha;
-10. retornar os IDs do original e do novo lançamento com HTTP `201`;
-11. retornar `409` ao tentar substituir um registro já substituído.
+1. [x] implementar `POST /api/lancamentos/:id/substituir`;
+2. [x] buscar e bloquear o original, exigindo status `ATIVO`;
+3. [x] manter obrigatoriamente a empresa do registro original;
+4. [x] validar a nova categoria, data, valor e motivo;
+5. [x] executar a operação em uma única função PostgreSQL/RPC;
+6. [x] criar o substituto `ATIVO` apontando para o original;
+7. [x] alterar o original para `SUBSTITUIDO` apenas se ele ainda estiver `ATIVO`;
+8. [x] confirmar que exatamente um original foi atualizado;
+9. [x] provocar rollback integral ao lançar erro em qualquer etapa;
+10. [x] retornar os IDs do original e do novo lançamento com HTTP `201`;
+11. [x] retornar `409` ao tentar substituir um registro já substituído.
 
 Decisão técnica obrigatória:
 
@@ -219,12 +221,20 @@ Decisão técnica obrigatória:
 
 Validação da etapa:
 
-- o original permanece armazenado e sem alteração nos dados de negócio;
-- apenas seu status e `substituido_em` mudam;
-- o novo registro nasce `ATIVO` e aponta para o anterior;
-- motivo vazio é rejeitado;
-- uma falha provocada confirma o rollback;
-- uma cadeia com três lançamentos permanece linear.
+- [ ] o original permanece armazenado e sem alteração nos dados de negócio no remoto;
+- [ ] apenas seu status e `substituido_em` mudam no remoto;
+- [ ] o novo registro nasce `ATIVO` e aponta para o anterior no remoto;
+- [x] motivo vazio ou composto somente por espaços é rejeitado;
+- [ ] uma falha provocada confirma o rollback no remoto;
+- [ ] uma cadeia com três lançamentos permanece linear no remoto.
+
+Evidências disponíveis:
+
+- 59 testes isolados aprovam schemas, service, repository, endpoint e mapeamento dos erros da RPC;
+- o repository faz uma única chamada a `substituir_lancamento_p0`;
+- a migration usa bloqueio `FOR UPDATE`, verifica a quantidade atualizada e restringe a execução à `service_role`;
+- a tentativa não destrutiva no remoto manteve a tabela vazia, mas retornou `PGRST202`, confirmando que a nova função ainda não foi aplicada;
+- após aplicar `supabase/migrations/20260821010000_criar_funcao_substituicao_p0.sql`, ainda será necessário executar o cenário integrado de sucesso, conflito, rollback e cadeia linear.
 
 ### Etapa 6 — Criar a camada de API do frontend
 
@@ -472,4 +482,4 @@ O protótipo P0 estará pronto quando:
 
 ## 8. Próxima ação recomendada
 
-Avançar para a **Etapa 5**, implementando a substituição de lançamentos em uma única transação PostgreSQL. O original deve permanecer armazenado como `SUBSTITUIDO` e o novo registro deve nascer `ATIVO`, sem risco de atualização parcial.
+Aplicar `supabase/migrations/20260821010000_criar_funcao_substituicao_p0.sql` no Supabase remoto e concluir as validações transacionais da **Etapa 5**. Somente depois avançar para a camada de API do frontend da Etapa 6.
