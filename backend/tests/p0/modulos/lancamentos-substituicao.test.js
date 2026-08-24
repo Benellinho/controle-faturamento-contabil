@@ -249,7 +249,7 @@ describe('endpoint de substituicao de lancamentos', () => {
     ['categoria ausente', '/api/lancamentos/15/substituir', { ...validPayload, categoria_id: undefined }],
     ['data invalida', '/api/lancamentos/15/substituir', { ...validPayload, data_referencia: '2026-02-30' }],
     ['data fora do primeiro dia', '/api/lancamentos/15/substituir', { ...validPayload, data_referencia: '2026-08-20' }],
-    ['valor zero', '/api/lancamentos/15/substituir', { ...validPayload, valor: 0 }],
+    ['valor negativo', '/api/lancamentos/15/substituir', { ...validPayload, valor: -1 }],
     ['valor com mais de duas casas', '/api/lancamentos/15/substituir', { ...validPayload, valor: 10.123 }],
     ['percentual ausente', '/api/lancamentos/15/substituir', { ...validPayload, percentual_imposto: undefined }],
     ['percentual acima de cem', '/api/lancamentos/15/substituir', { ...validPayload, percentual_imposto: 100.01 }],

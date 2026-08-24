@@ -368,6 +368,22 @@ describe('endpoint de criacao de lancamentos', () => {
     })
   })
 
+  test('aceita valor zero para categoria sem faturamento', async () => {
+    const payload = { ...validPayload, valor: 0 }
+
+    await withApp({
+      async criar(receivedPayload) {
+        assert.deepEqual(receivedPayload, payload)
+        return { ...createdFixture, valor: 0 }
+      },
+    }, async (app) => {
+      const response = await app.inject({ method: 'POST', url: '/api/lancamentos', payload })
+
+      assert.equal(response.statusCode, 201)
+      assert.equal(response.json().valor, 0)
+    })
+  })
+
   const invalidPayloads = [
     ['empresa ausente', { ...validPayload, empresa_id: undefined }],
     ['categoria ausente', { ...validPayload, categoria_id: undefined }],
@@ -375,7 +391,6 @@ describe('endpoint de criacao de lancamentos', () => {
     ['tipo invalido', { ...validPayload, tipo_lancamento: 'RETIDO' }],
     ['data ausente', { ...validPayload, data_referencia: undefined }],
     ['valor ausente', { ...validPayload, valor: undefined }],
-    ['valor zero', { ...validPayload, valor: 0 }],
     ['valor negativo', { ...validPayload, valor: -1 }],
     ['valor com mais de duas casas', { ...validPayload, valor: 10.123 }],
     ['valor acima do banco', { ...validPayload, valor: 1000000000000 }],

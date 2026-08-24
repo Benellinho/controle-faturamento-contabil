@@ -17,9 +17,14 @@ const nullableStringSchema = {
 
 const monetaryValueSchema = {
   type: 'number',
-  exclusiveMinimum: 0,
+  minimum: 0,
   maximum: 999999999999.99,
   multipleOf: 0.01,
+}
+
+const positiveMonetaryValueSchema = {
+  ...monetaryValueSchema,
+  exclusiveMinimum: 0,
 }
 
 const balanceValueSchema = {
@@ -304,7 +309,7 @@ export const substituirLancamentoSchema = {
     properties: {
       categoria_id: safeIdSchema,
       data_referencia: referenceDateSchema,
-      valor: monetaryValueSchema,
+      valor: positiveMonetaryValueSchema,
       percentual_imposto: taxPercentageSchema,
       observacao: nullableStringSchema,
       motivo_substituicao: { type: 'string', minLength: 1 },
