@@ -11,6 +11,7 @@ import {
   createCategoriaItems,
   createInitialLancamentoValues,
   createSingleFlight,
+  itemKey,
   referenceDateFromMonth,
   submitLancamentoValues,
   validateLancamentoValues,
@@ -77,11 +78,11 @@ function FaturamentoForm({ initialEmpresaId, onCancel, onCreated }) {
     setApiError('')
   }
 
-  function updateItem(categoriaId, field, value) {
+  function updateItem(key, field, value) {
     setValues((current) => ({
       ...current,
       itens: current.itens.map((item) => (
-        item.categoria_id === categoriaId ? { ...item, [field]: value } : item
+        itemKey(item) === key ? { ...item, [field]: value } : item
       )),
     }))
     setErrors({})
@@ -178,7 +179,7 @@ function FaturamentoForm({ initialEmpresaId, onCancel, onCreated }) {
 
         <fieldset className="form-section" disabled={isSubmitting || isLoadingCategorias || !values.empresa_id}>
           <legend>Categorias da empresa</legend>
-          <p className="form-section-description">Preencha valor e percentual de imposto para todas as categorias. O imposto é calculado automaticamente e não é armazenado.</p>
+          <p className="form-section-description">Preencha os lançamentos Normal e com RT de cada categoria. Cada um possui valor e imposto próprios.</p>
 
           {isLoadingCategorias && <div className="p-3 text-center" role="status"><span className="spinner-border spinner-border-sm" aria-hidden="true" /> Carregando categorias...</div>}
           {hasLoadedCategorias && !isLoadingCategorias && values.empresa_id && values.itens.length === 0 && <div className="alert alert-warning">Esta empresa não possui categorias cadastradas.</div>}
@@ -186,31 +187,32 @@ function FaturamentoForm({ initialEmpresaId, onCancel, onCreated }) {
 
           <div className="category-entry-list">
             {values.itens.map((item) => {
-              const itemErrors = errors.itens?.[item.categoria_id] ?? {}
+              const key = itemKey(item)
+              const itemErrors = errors.itens?.[key] ?? {}
               const percentage = Number(String(item.percentual_imposto).replace(',', '.')) || 0
               const taxInCents = Math.round((item.valor ?? 0) * percentage / 100)
 
               return (
-                <article className="category-entry" key={item.categoria_id}>
-                  <h3>{item.categoria_nome}</h3>
+                <article className="category-entry" key={key}>
+                  <h3>{item.categoria_nome}{item.tipo_lancamento === 'COM_RT' ? ' com RT' : ''}</h3>
                   <div className="row g-3">
                     <div className="col-12 col-md-7">
-                      <label className="form-label" htmlFor={`categoria-${item.categoria_id}-valor`}>Valor <span className="required-mark">*</span></label>
-                      <MoneyInput id={`categoria-${item.categoria_id}-valor`} invalid={Boolean(itemErrors.valor)} onChange={(value) => updateItem(item.categoria_id, 'valor', value)} value={item.valor} />
+                      <label className="form-label" htmlFor={`categoria-${key}-valor`}>Valor {item.tipo_nome} <span className="required-mark">*</span></label>
+                      <MoneyInput id={`categoria-${key}-valor`} invalid={Boolean(itemErrors.valor)} onChange={(value) => updateItem(key, 'valor', value)} value={item.valor} />
                       {itemErrors.valor && <div className="invalid-feedback">{itemErrors.valor}</div>}
                     </div>
                     <div className="col-12 col-md-5">
-                      <label className="form-label" htmlFor={`categoria-${item.categoria_id}-imposto`}>% de imposto <span className="required-mark">*</span></label>
+                      <label className="form-label" htmlFor={`categoria-${key}-imposto`}>% de imposto {item.tipo_nome} <span className="required-mark">*</span></label>
                       <div className="input-group">
-                        <PercentageInput id={`categoria-${item.categoria_id}-imposto`} invalid={Boolean(itemErrors.percentual_imposto)} onChange={(value) => updateItem(item.categoria_id, 'percentual_imposto', value)} value={item.percentual_imposto} />
+                        <PercentageInput id={`categoria-${key}-imposto`} invalid={Boolean(itemErrors.percentual_imposto)} onChange={(value) => updateItem(key, 'percentual_imposto', value)} value={item.percentual_imposto} />
                         <span className="input-group-text">%</span>
                         {itemErrors.percentual_imposto && <div className="invalid-feedback">{itemErrors.percentual_imposto}</div>}
                       </div>
                       <div className="form-text">Imposto: {formatCurrencyFromCents(taxInCents)}</div>
                     </div>
                     <div className="col-12">
-                      <label className="form-label" htmlFor={`categoria-${item.categoria_id}-observacao`}>Observação <span className="optional-label">Opcional</span></label>
-                      <input className="form-control" id={`categoria-${item.categoria_id}-observacao`} onChange={(event) => updateItem(item.categoria_id, 'observacao', event.target.value)} type="text" value={item.observacao} />
+                      <label className="form-label" htmlFor={`categoria-${key}-observacao`}>Observação <span className="optional-label">Opcional</span></label>
+                      <input className="form-control" id={`categoria-${key}-observacao`} onChange={(event) => updateItem(key, 'observacao', event.target.value)} type="text" value={item.observacao} />
                     </div>
                   </div>
                 </article>
@@ -235,7 +237,7 @@ function FaturamentoForm({ initialEmpresaId, onCancel, onCreated }) {
             <thead><tr><th>Categoria</th><th className="text-end">Valor</th><th className="text-end">Imposto</th></tr></thead>
             <tbody>{values.itens.map((item) => {
               const percentage = Number(String(item.percentual_imposto).replace(',', '.')) || 0
-              return <tr key={item.categoria_id}><td>{item.categoria_nome}<small className="d-block text-body-secondary">{percentage.toLocaleString('pt-BR')}%</small></td><td className="text-end">{formatCurrencyFromCents(item.valor)}</td><td className="text-end">{formatCurrencyFromCents(Math.round(item.valor * percentage / 100))}</td></tr>
+              return <tr key={itemKey(item)}><td>{item.categoria_nome}<small className="d-block text-body-secondary">{item.tipo_nome} · {percentage.toLocaleString('pt-BR')}%</small></td><td className="text-end">{formatCurrencyFromCents(item.valor)}</td><td className="text-end">{formatCurrencyFromCents(Math.round(item.valor * percentage / 100))}</td></tr>
             })}</tbody>
           </table>
         </div>

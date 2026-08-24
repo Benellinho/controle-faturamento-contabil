@@ -84,6 +84,7 @@ function FaturamentoDetails({ onNavigate, recordId }) {
         <DetailItem label="Empresa" value={lancamento.empresa.nome} />
         <DetailItem label="CNPJ" value={formatCnpj(lancamento.empresa.cnpj)} />
         <DetailItem label="Categoria" value={lancamento.categoria.nome} />
+        <DetailItem label="Tipo" value={lancamento.tipo_lancamento === 'COM_RT' ? 'Com RT' : 'Normal'} />
         <DetailItem label="Competência" value={formatReferenceMonth(lancamento.data_referencia)} />
         <DetailItem className="col-12 col-md-6 detail-highlight" label="Valor do lançamento" value={formatCurrency(lancamento.valor)} />
         <DetailItem label="Percentual de imposto" value={formatPercentage(lancamento.percentual_imposto)} />

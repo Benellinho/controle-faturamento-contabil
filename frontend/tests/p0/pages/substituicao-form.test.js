@@ -17,6 +17,7 @@ const lancamento = {
   data_referencia: '2026-08-01',
   valor: 5000,
   percentual_imposto: 7.25,
+  tipo_lancamento: 'COM_RT',
   observacao: 'Valor original.',
 }
 
@@ -113,7 +114,7 @@ describe('regras do formulario de substituicao', () => {
     )
 
     assert.match(source, /id="substituicao-categoria" readOnly value=\{lancamento\.categoria\.nome\}/)
-    assert.match(source, /A categoria não pode ser alterada durante uma substituição\./)
+    assert.match(source, /a categoria e o tipo não podem ser alterados durante uma substituição\./)
     assert.doesNotMatch(source, /listarCategorias|<select[^>]+id="substituicao-categoria"/)
   })
 

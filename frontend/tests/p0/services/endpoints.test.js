@@ -89,6 +89,7 @@ describe('endpoints de lancamentos', () => {
     const payload = {
       empresa_id: 1,
       categoria_id: 2,
+      tipo_lancamento: 'NORMAL',
       data_referencia: '2026-08-01',
       valor: 5000,
       percentual_imposto: 7.25,
@@ -113,8 +114,10 @@ describe('endpoints de lancamentos', () => {
       caixa_inicial: 5000,
       caixa_final: 6200,
       itens: [
-        { categoria_id: 2, valor: 5000, percentual_imposto: 7.25 },
-        { categoria_id: 3, valor: 1500, percentual_imposto: 3 },
+        { categoria_id: 2, tipo_lancamento: 'NORMAL', valor: 5000, percentual_imposto: 7.25 },
+        { categoria_id: 2, tipo_lancamento: 'COM_RT', valor: 800, percentual_imposto: 5 },
+        { categoria_id: 3, tipo_lancamento: 'NORMAL', valor: 1500, percentual_imposto: 3 },
+        { categoria_id: 3, tipo_lancamento: 'COM_RT', valor: 200, percentual_imposto: 2 },
       ],
     }
 

@@ -8,6 +8,7 @@ import { createLancamentosService } from '../../../src/modules/p0/lancamentos/la
 const validPayload = {
   empresa_id: 1,
   categoria_id: 2,
+  tipo_lancamento: 'NORMAL',
   data_referencia: '2026-08-01',
   valor: 5000.55,
   percentual_imposto: 7.25,
@@ -36,15 +37,22 @@ const validBatchPayload = {
   caixa_inicial: 5000,
   caixa_final: 6200,
   itens: [
-    { categoria_id: 2, valor: 5000.55, percentual_imposto: 7.25, observacao: 'Vendas.' },
-    { categoria_id: 3, valor: 1500, percentual_imposto: 3 },
+    { categoria_id: 2, tipo_lancamento: 'NORMAL', valor: 5000.55, percentual_imposto: 7.25, observacao: 'Vendas.' },
+    { categoria_id: 2, tipo_lancamento: 'COM_RT', valor: 800, percentual_imposto: 5 },
+    { categoria_id: 3, tipo_lancamento: 'NORMAL', valor: 1500, percentual_imposto: 3 },
+    { categoria_id: 3, tipo_lancamento: 'COM_RT', valor: 200, percentual_imposto: 2 },
   ],
 }
 
 const batchFixture = {
   mensagem: 'Lançamentos criados com sucesso.',
-  total: 2,
-  lancamentos: [{ id: 31, categoria_id: 2 }, { id: 32, categoria_id: 3 }],
+  total: 4,
+  lancamentos: [
+    { id: 31, categoria_id: 2, tipo_lancamento: 'NORMAL' },
+    { id: 32, categoria_id: 2, tipo_lancamento: 'COM_RT' },
+    { id: 33, categoria_id: 3, tipo_lancamento: 'NORMAL' },
+    { id: 34, categoria_id: 3, tipo_lancamento: 'COM_RT' },
+  ],
 }
 
 function createService(overrides = {}) {
@@ -178,6 +186,7 @@ describe('repository de criacao de lancamentos', () => {
       id: 31,
       empresa_id: 1,
       categoria_id: 2,
+      tipo_lancamento: 'NORMAL',
       data_referencia: '2026-08-01',
       valor: '5000.55',
       percentual_imposto: '7.2500',
@@ -235,7 +244,12 @@ describe('repository de criacao de lancamentos', () => {
         rpcName = name
         rpcParameters = parameters
         return {
-          data: [{ id: 31, categoria_id: 2 }, { id: 32, categoria_id: 3 }],
+          data: [
+            { id: 31, categoria_id: 2, tipo_lancamento: 'NORMAL' },
+            { id: 32, categoria_id: 2, tipo_lancamento: 'COM_RT' },
+            { id: 33, categoria_id: 3, tipo_lancamento: 'NORMAL' },
+            { id: 34, categoria_id: 3, tipo_lancamento: 'COM_RT' },
+          ],
           error: null,
         }
       },
@@ -251,8 +265,10 @@ describe('repository de criacao de lancamentos', () => {
       p_caixa_inicial: 5000,
       p_caixa_final: 6200,
       p_itens: [
-        { categoria_id: 2, valor: 5000.55, percentual_imposto: 7.25, observacao: 'Vendas.' },
-        { categoria_id: 3, valor: 1500, percentual_imposto: 3, observacao: null },
+        { categoria_id: 2, tipo_lancamento: 'NORMAL', valor: 5000.55, percentual_imposto: 7.25, observacao: 'Vendas.' },
+        { categoria_id: 2, tipo_lancamento: 'COM_RT', valor: 800, percentual_imposto: 5, observacao: null },
+        { categoria_id: 3, tipo_lancamento: 'NORMAL', valor: 1500, percentual_imposto: 3, observacao: null },
+        { categoria_id: 3, tipo_lancamento: 'COM_RT', valor: 200, percentual_imposto: 2, observacao: null },
       ],
     })
   })
@@ -305,6 +321,7 @@ describe('endpoint de criacao de lancamentos', () => {
     const payload = {
       empresa_id: 1,
       categoria_id: 2,
+      tipo_lancamento: 'NORMAL',
       data_referencia: '2026-08-01',
       valor: 5000,
       percentual_imposto: 7.25,
@@ -354,6 +371,8 @@ describe('endpoint de criacao de lancamentos', () => {
   const invalidPayloads = [
     ['empresa ausente', { ...validPayload, empresa_id: undefined }],
     ['categoria ausente', { ...validPayload, categoria_id: undefined }],
+    ['tipo ausente', { ...validPayload, tipo_lancamento: undefined }],
+    ['tipo invalido', { ...validPayload, tipo_lancamento: 'RETIDO' }],
     ['data ausente', { ...validPayload, data_referencia: undefined }],
     ['valor ausente', { ...validPayload, valor: undefined }],
     ['valor zero', { ...validPayload, valor: 0 }],

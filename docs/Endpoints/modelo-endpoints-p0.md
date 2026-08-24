@@ -148,6 +148,7 @@ GET /api/lancamentos?empresa_id=1&status=ATIVO
       "id": 2,
       "nome": "Serviços"
     },
+    "tipo_lancamento": "NORMAL",
     "valor": 5500.00,
     "percentual_imposto": 7.25,
     "status": "ATIVO",
@@ -178,6 +179,7 @@ Retorna os detalhes e os identificadores necessários para navegar no histórico
     "id": 2,
     "nome": "Serviços"
   },
+  "tipo_lancamento": "COM_RT",
   "data_referencia": "2026-08-01",
   "valor": 5500.00,
   "percentual_imposto": 7.25,
@@ -210,6 +212,7 @@ Cria um lançamento comum.
 {
   "empresa_id": 1,
   "categoria_id": 2,
+  "tipo_lancamento": "NORMAL",
   "data_referencia": "2026-08-01",
   "valor": 5000.00,
   "percentual_imposto": 7.25,
@@ -219,7 +222,8 @@ Cria um lançamento comum.
 
 ### Validações
 
-- `empresa_id`, `categoria_id`, `data_referencia`, `valor` e `percentual_imposto` são obrigatórios;
+- `empresa_id`, `categoria_id`, `tipo_lancamento`, `data_referencia`, `valor` e `percentual_imposto` são obrigatórios;
+- `tipo_lancamento` aceita `NORMAL` ou `COM_RT`;
 - empresa e categoria devem existir;
 - a categoria deve pertencer à empresa;
 - a data deve ser válida e representar o primeiro dia do mês (`YYYY-MM-01`);
@@ -236,6 +240,7 @@ O cliente não pode informar `status`, `substitui_lancamento_id`, `motivo_substi
   "id": 15,
   "empresa_id": 1,
   "categoria_id": 2,
+  "tipo_lancamento": "NORMAL",
   "data_referencia": "2026-08-01",
   "valor": 5000.00,
   "percentual_imposto": 7.25,
@@ -250,7 +255,7 @@ O cliente não pode informar `status`, `substitui_lancamento_id`, `motivo_substi
 
 ### 9.1 `POST /api/lancamentos/lote`
 
-Cria, em uma única transação, um lançamento para cada categoria da empresa.
+Cria, em uma única transação, os lançamentos Normal e com RT de cada categoria da empresa.
 
 ```json
 {
@@ -259,20 +264,22 @@ Cria, em uma única transação, um lançamento para cada categoria da empresa.
   "itens": [
     {
       "categoria_id": 2,
+      "tipo_lancamento": "NORMAL",
       "valor": 5000.00,
       "percentual_imposto": 7.25,
       "observacao": "Vendas"
     },
     {
-      "categoria_id": 3,
-      "valor": 1500.00,
-      "percentual_imposto": 3.00
+      "categoria_id": 2,
+      "tipo_lancamento": "COM_RT",
+      "valor": 1200.00,
+      "percentual_imposto": 4.00
     }
   ]
 }
 ```
 
-O lote deve conter exatamente todas as categorias da empresa, sem repetições. Qualquer falha desfaz o lote inteiro.
+O lote deve conter exatamente os dois tipos (`NORMAL` e `COM_RT`) de todas as categorias, sem repetir o mesmo tipo na categoria. Cada tipo possui valor e percentual de imposto independentes. Qualquer falha desfaz o lote inteiro.
 
 Resposta `201`:
 
@@ -281,8 +288,8 @@ Resposta `201`:
   "mensagem": "Lançamentos criados com sucesso.",
   "total": 2,
   "lancamentos": [
-    { "id": 15, "categoria_id": 2 },
-    { "id": 16, "categoria_id": 3 }
+    { "id": 15, "categoria_id": 2, "tipo_lancamento": "NORMAL" },
+    { "id": 16, "categoria_id": 2, "tipo_lancamento": "COM_RT" }
   ]
 }
 ```
@@ -311,6 +318,7 @@ A empresa não é recebida no corpo. O backend reutiliza a empresa do lançament
 - o lançamento original deve existir;
 - o lançamento original deve estar `ATIVO`;
 - a categoria deve pertencer à empresa do original;
+- o tipo Normal/com RT é preservado do lançamento original e não pode ser alterado;
 - a data deve ser válida e representar o primeiro dia do mês (`YYYY-MM-01`);
 - o valor deve ser maior que zero;
 - o percentual de imposto deve estar entre `0` e `100`, com até duas casas decimais;

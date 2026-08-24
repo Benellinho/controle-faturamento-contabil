@@ -162,7 +162,7 @@ function SubstituirFaturamento({ onNavigate, recordId }) {
                 <div className="col-12">
                   <label className="form-label" htmlFor="substituicao-categoria">Categoria</label>
                   <input className="form-control" id="substituicao-categoria" readOnly value={lancamento.categoria.nome} />
-                  <div className="form-text">A categoria não pode ser alterada durante uma substituição.</div>
+                  <div className="form-text">{lancamento.tipo_lancamento === 'COM_RT' ? 'Com RT' : 'Normal'} — a categoria e o tipo não podem ser alterados durante uma substituição.</div>
                 </div>
               </div>
             </fieldset>
@@ -209,6 +209,7 @@ function SubstituirFaturamento({ onNavigate, recordId }) {
         <dl className="review-list">
           <div><dt>Empresa</dt><dd>{lancamento.empresa.nome}</dd></div>
           <div><dt>Categoria</dt><dd>{lancamento.categoria.nome}</dd></div>
+          <div><dt>Tipo</dt><dd>{lancamento.tipo_lancamento === 'COM_RT' ? 'Com RT' : 'Normal'}</dd></div>
           <div><dt>Mês de referência</dt><dd>{formatReferenceMonth(values.data_referencia)}</dd></div>
           <div><dt>Novo valor</dt><dd>{formatCurrencyFromCents(values.valor)}</dd></div>
           <div><dt>Percentual de imposto</dt><dd>{formatPercentage(values.percentual_imposto)}</dd></div>

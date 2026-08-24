@@ -18,6 +18,10 @@ const balancesMigrationUrl = new URL(
   '../../../../supabase/migrations/20260824000000_adicionar_saldos_estoque_caixa_p0.sql',
   import.meta.url,
 )
+const normalAndRtMigrationUrl = new URL(
+  '../../../../supabase/migrations/20260824010000_adicionar_lancamentos_normal_e_rt_p0.sql',
+  import.meta.url,
+)
 
 test('migration adiciona imposto e lote atomico restrito a service role', async () => {
   const sql = await readFile(migrationUrl, 'utf8')
@@ -67,4 +71,15 @@ test('migration adiciona saldos mensais ao lote e preserva na substituicao', asy
   assert.match(sql, /CREATE TRIGGER trg_herdar_saldos_lancamento_substituto_p0/)
   assert.match(sql, /NEW\.caixa_final := v_original\.caixa_final/)
   assert.match(sql, /^COMMIT;/m)
+})
+
+test('migration exige os campos Normal e com RT com impostos independentes', async () => {
+  const sql = await readFile(normalAndRtMigrationUrl, 'utf8')
+
+  assert.match(sql, /ADD COLUMN IF NOT EXISTS tipo_lancamento VARCHAR\(10\)/)
+  assert.match(sql, /tipo_lancamento IN \('NORMAL', 'COM_RT'\)/)
+  assert.match(sql, /CROSS JOIN \(VALUES \('NORMAL'\), \('COM_RT'\)\)/)
+  assert.match(sql, /CAMPOS_CATEGORIA_DUPLICADOS/)
+  assert.match(sql, /v_original\.tipo_lancamento/)
+  assert.match(sql, /lancamentos\.tipo_lancamento/)
 })

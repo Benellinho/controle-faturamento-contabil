@@ -50,13 +50,30 @@ export function createInitialLancamentoValues(date = new Date(), empresaId = nul
 }
 
 export function createCategoriaItems(categorias) {
-  return categorias.map((categoria) => ({
-    categoria_id: String(categoria.id),
-    categoria_nome: categoria.nome,
-    valor: null,
-    percentual_imposto: '',
-    observacao: '',
-  }))
+  return categorias.flatMap((categoria) => ([
+    {
+      categoria_id: String(categoria.id),
+      categoria_nome: categoria.nome,
+      tipo_lancamento: 'NORMAL',
+      tipo_nome: 'Normal',
+      valor: null,
+      percentual_imposto: '',
+      observacao: '',
+    },
+    {
+      categoria_id: String(categoria.id),
+      categoria_nome: categoria.nome,
+      tipo_lancamento: 'COM_RT',
+      tipo_nome: 'Com RT',
+      valor: null,
+      percentual_imposto: '',
+      observacao: '',
+    },
+  ]))
+}
+
+export function itemKey(item) {
+  return `${item.categoria_id}-${item.tipo_lancamento}`
 }
 
 export function validateLancamentoValues(values) {
@@ -82,13 +99,14 @@ export function validateLancamentoValues(values) {
   for (const item of values.itens) {
     const current = {}
     if (!isPositiveSafeId(item.categoria_id)) current.categoria_id = 'Categoria inválida.'
+    if (!['NORMAL', 'COM_RT'].includes(item.tipo_lancamento)) current.tipo_lancamento = 'Tipo de lançamento inválido.'
     if (!Number.isSafeInteger(item.valor) || item.valor <= 0 || item.valor > MAX_VALUE_IN_CENTS) {
       current.valor = 'Informe um valor maior que zero e dentro do limite permitido.'
     }
     if (!isValidTaxPercentage(item.percentual_imposto)) {
       current.percentual_imposto = 'Informe um percentual entre 0 e 100, com até duas casas.'
     }
-    if (Object.keys(current).length) itemErrors[item.categoria_id] = current
+    if (Object.keys(current).length) itemErrors[itemKey(item)] = current
   }
 
   if (Object.keys(itemErrors).length) errors.itens = itemErrors
@@ -107,6 +125,7 @@ export function buildLancamentosLotePayload(values) {
       const observacao = item.observacao.trim()
       return {
         categoria_id: Number(item.categoria_id),
+        tipo_lancamento: item.tipo_lancamento,
         valor: item.valor / 100,
         percentual_imposto: Number(String(item.percentual_imposto).replace(',', '.')),
         ...(observacao ? { observacao } : {}),

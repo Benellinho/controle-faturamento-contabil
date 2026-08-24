@@ -24,8 +24,10 @@ const validValues = {
   caixa_inicial: 500_000,
   caixa_final: 620_000,
   itens: [
-    { categoria_id: '2', categoria_nome: 'Vendas', valor: 500_000, percentual_imposto: '7.25', observacao: ' Principal. ' },
-    { categoria_id: '3', categoria_nome: 'Anexo III', valor: 150_000, percentual_imposto: '3', observacao: ' ' },
+    { categoria_id: '2', categoria_nome: 'Vendas', tipo_lancamento: 'NORMAL', tipo_nome: 'Normal', valor: 500_000, percentual_imposto: '7.25', observacao: ' Principal. ' },
+    { categoria_id: '2', categoria_nome: 'Vendas', tipo_lancamento: 'COM_RT', tipo_nome: 'Com RT', valor: 80_000, percentual_imposto: '5', observacao: ' Retido. ' },
+    { categoria_id: '3', categoria_nome: 'Anexo III', tipo_lancamento: 'NORMAL', tipo_nome: 'Normal', valor: 150_000, percentual_imposto: '3', observacao: ' ' },
+    { categoria_id: '3', categoria_nome: 'Anexo III', tipo_lancamento: 'COM_RT', tipo_nome: 'Com RT', valor: 20_000, percentual_imposto: '2', observacao: ' ' },
   ],
 }
 
@@ -46,10 +48,12 @@ describe('regras do formulario de lancamentos em lote', () => {
     assert.equal(createInitialLancamentoValues(new Date(2026, 7, 21), 'inválida').empresa_id, '')
   })
 
-  test('cria uma linha editavel para cada categoria da empresa', () => {
+  test('cria os campos Normal e com RT para cada categoria da empresa', () => {
     assert.deepEqual(createCategoriaItems([{ id: 2, nome: 'Vendas' }, { id: 3, nome: 'Anexo III' }]), [
-      { categoria_id: '2', categoria_nome: 'Vendas', valor: null, percentual_imposto: '', observacao: '' },
-      { categoria_id: '3', categoria_nome: 'Anexo III', valor: null, percentual_imposto: '', observacao: '' },
+      { categoria_id: '2', categoria_nome: 'Vendas', tipo_lancamento: 'NORMAL', tipo_nome: 'Normal', valor: null, percentual_imposto: '', observacao: '' },
+      { categoria_id: '2', categoria_nome: 'Vendas', tipo_lancamento: 'COM_RT', tipo_nome: 'Com RT', valor: null, percentual_imposto: '', observacao: '' },
+      { categoria_id: '3', categoria_nome: 'Anexo III', tipo_lancamento: 'NORMAL', tipo_nome: 'Normal', valor: null, percentual_imposto: '', observacao: '' },
+      { categoria_id: '3', categoria_nome: 'Anexo III', tipo_lancamento: 'COM_RT', tipo_nome: 'Com RT', valor: null, percentual_imposto: '', observacao: '' },
     ])
   })
 
@@ -70,8 +74,8 @@ describe('regras do formulario de lancamentos em lote', () => {
     values.itens[1].percentual_imposto = '7.123'
     const errors = validateLancamentoValues(values)
 
-    assert.ok(errors.itens['2'].valor)
-    assert.ok(errors.itens['3'].percentual_imposto)
+    assert.ok(errors.itens['2-NORMAL'].valor)
+    assert.ok(errors.itens['2-COM_RT'].percentual_imposto)
   })
 
   test('mascara imposto sem setas e limita a duas casas decimais', () => {
@@ -94,8 +98,10 @@ describe('regras do formulario de lancamentos em lote', () => {
       caixa_inicial: 5000,
       caixa_final: 6200,
       itens: [
-        { categoria_id: 2, valor: 5000, percentual_imposto: 7.25, observacao: 'Principal.' },
-        { categoria_id: 3, valor: 1500, percentual_imposto: 3 },
+        { categoria_id: 2, tipo_lancamento: 'NORMAL', valor: 5000, percentual_imposto: 7.25, observacao: 'Principal.' },
+        { categoria_id: 2, tipo_lancamento: 'COM_RT', valor: 800, percentual_imposto: 5, observacao: 'Retido.' },
+        { categoria_id: 3, tipo_lancamento: 'NORMAL', valor: 1500, percentual_imposto: 3 },
+        { categoria_id: 3, tipo_lancamento: 'COM_RT', valor: 200, percentual_imposto: 2 },
       ],
     })
   })
@@ -110,7 +116,7 @@ describe('regras do formulario de lancamentos em lote', () => {
       onCreated: (created) => { redirectedResult = created },
     })
 
-    assert.equal(receivedPayload.itens.length, 2)
+    assert.equal(receivedPayload.itens.length, 4)
     assert.deepEqual(redirectedResult, result)
   })
 
@@ -149,9 +155,12 @@ describe('regras do formulario de lancamentos em lote', () => {
     assert.match(source, /Caixa inicial/)
     assert.match(source, /Caixa final/)
     assert.doesNotMatch(source, /type="number"[^>]+percentual_imposto/)
-    assert.match(source, /className="col-12 col-md-7"[\s\S]+categoria-\$\{item\.categoria_id\}-valor/)
-    assert.match(source, /className="col-12 col-md-5"[\s\S]+categoria-\$\{item\.categoria_id\}-imposto/)
-    assert.match(source, /className="col-12"[\s\S]+categoria-\$\{item\.categoria_id\}-observacao/)
+    assert.match(source, /className="col-12 col-md-7"[\s\S]+categoria-\$\{key\}-valor/)
+    assert.match(source, /className="col-12 col-md-5"[\s\S]+categoria-\$\{key\}-imposto/)
+    assert.match(source, /className="col-12"[\s\S]+categoria-\$\{key\}-observacao/)
+    assert.match(source, /Normal e com RT/)
+    assert.match(source, /item\.tipo_lancamento === 'COM_RT' \? ' com RT' : ''/)
+    assert.doesNotMatch(source, /— \{item\.tipo_nome\}/)
     assert.doesNotMatch(percentageInputSource, /maxLength/)
     assert.match(percentageInputSource, /type="text"/)
     assert.match(source, /<FormActions[^>]+onCancel=\{onCancel\}/)

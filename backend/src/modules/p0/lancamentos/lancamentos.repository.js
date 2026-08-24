@@ -5,6 +5,7 @@ const listColumns = `
   data_referencia,
   valor,
   percentual_imposto,
+  tipo_lancamento,
   estoque_inicial,
   estoque_final,
   caixa_inicial,
@@ -27,6 +28,7 @@ const creationColumns = `
   id,
   empresa_id,
   categoria_id,
+  tipo_lancamento,
   data_referencia,
   valor,
   percentual_imposto,
@@ -50,6 +52,7 @@ function normalizeListItem(row) {
     categoria: row.categoria,
     valor: Number(row.valor),
     percentual_imposto: Number(row.percentual_imposto),
+    tipo_lancamento: row.tipo_lancamento,
     estoque_inicial: row.estoque_inicial === null ? null : Number(row.estoque_inicial),
     estoque_final: row.estoque_final === null ? null : Number(row.estoque_final),
     caixa_inicial: row.caixa_inicial === null ? null : Number(row.caixa_inicial),
@@ -86,8 +89,8 @@ function normalizeCreated(row) {
 function batchCreationError(error) {
   const errors = {
     EMPRESA_NAO_ENCONTRADA: new AppError(404, 'EMPRESA_NAO_ENCONTRADA', 'A empresa informada nao foi encontrada.'),
-    CATEGORIAS_INCOMPLETAS: new AppError(400, 'CATEGORIAS_INCOMPLETAS', 'Informe todas as categorias da empresa exatamente uma vez.'),
-    CATEGORIAS_DUPLICADAS: new AppError(400, 'CATEGORIAS_DUPLICADAS', 'Uma categoria nao pode aparecer mais de uma vez no lote.'),
+    CATEGORIAS_INCOMPLETAS: new AppError(400, 'CATEGORIAS_INCOMPLETAS', 'Informe os campos Normal e com RT de todas as categorias da empresa.'),
+    CAMPOS_CATEGORIA_DUPLICADOS: new AppError(400, 'CAMPOS_CATEGORIA_DUPLICADOS', 'O mesmo campo da categoria nao pode aparecer mais de uma vez no lote.'),
     PARAMETROS_INVALIDOS: new AppError(400, 'PARAMETROS_INVALIDOS', 'Os parametros informados sao invalidos.'),
   }
 
@@ -163,6 +166,7 @@ export function createLancamentosRepository(client) {
         data_referencia: payload.data_referencia,
         valor: payload.valor,
         percentual_imposto: payload.percentual_imposto,
+        tipo_lancamento: payload.tipo_lancamento,
         estoque_inicial: payload.estoque_inicial,
         estoque_final: payload.estoque_final,
         caixa_inicial: payload.caixa_inicial,
@@ -196,6 +200,7 @@ export function createLancamentosRepository(client) {
         p_caixa_final: payload.caixa_final,
         p_itens: payload.itens.map((item) => ({
           categoria_id: item.categoria_id,
+          tipo_lancamento: item.tipo_lancamento,
           valor: item.valor,
           percentual_imposto: item.percentual_imposto,
           observacao: item.observacao ?? null,
@@ -207,6 +212,7 @@ export function createLancamentosRepository(client) {
       const lancamentos = (data ?? []).map((item) => ({
         id: item.id,
         categoria_id: item.categoria_id,
+        tipo_lancamento: item.tipo_lancamento,
       }))
 
       return {

@@ -52,6 +52,7 @@ test('checklist da API P0 contra o Supabase local', {
     const payload = {
       empresa_id: empresa.id,
       categoria_id: categoria.id,
+      tipo_lancamento: 'NORMAL',
       data_referencia: dataReferencia,
       valor: 1234.56,
       percentual_imposto: 7.25,
@@ -88,7 +89,7 @@ test('checklist da API P0 contra o Supabase local', {
     })
     assert.equal(missingDetailResponse.statusCode, 404)
 
-    for (const requiredField of ['empresa_id', 'categoria_id', 'data_referencia', 'valor', 'percentual_imposto', 'estoque_inicial', 'estoque_final', 'caixa_inicial', 'caixa_final']) {
+    for (const requiredField of ['empresa_id', 'categoria_id', 'tipo_lancamento', 'data_referencia', 'valor', 'percentual_imposto', 'estoque_inicial', 'estoque_final', 'caixa_inicial', 'caixa_final']) {
       const invalidPayload = { ...payload }
       delete invalidPayload[requiredField]
       const response = await app.inject({ method: 'POST', url: '/api/lancamentos', payload: invalidPayload })
