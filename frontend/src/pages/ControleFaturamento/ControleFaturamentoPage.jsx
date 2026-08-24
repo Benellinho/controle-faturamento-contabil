@@ -2,25 +2,41 @@ import { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../../components/layout/PageHeader'
 import ListFilters from '../../components/table/ListFilters'
 import TableEmpty from '../../components/table/TableEmpty'
-import { listarEmpresas } from '../../services/empresasApi'
+import { listarCategorias, listarEmpresas } from '../../services/empresasApi'
 import { listarLancamentos } from '../../services/lancamentosApi'
 import { formatCnpj, formatCurrency, formatPercentage } from '../../utils/formatters'
 import { buildAnnualReport, createYearOptions, currentYear, monthName } from './controleAnual'
 
-function formatOptionalCurrency(value) {
-  return value === null ? '—' : formatCurrency(value)
+function formatTaxPercentages(entry) {
+  return entry?.taxPercentages.map(formatPercentage).join(' / ') || '—'
+}
+
+function RevenueCell({ entry }) {
+  return <td className="text-center text-nowrap">{formatCurrency(entry?.value ?? 0)}</td>
+}
+
+function TaxCell({ entry }) {
+  if (!entry?.taxPercentages.length) return <td className="text-center">—</td>
+
+  return (
+    <td className="text-center text-nowrap">
+      {formatTaxPercentages(entry)}
+      <small className="d-block text-body-secondary">{formatCurrency(entry.taxAmount)}</small>
+    </td>
+  )
 }
 
 function ControleFaturamentoPage() {
   const [filters, setFilters] = useState({ empresa_id: '', ano: String(currentYear()) })
   const [empresas, setEmpresas] = useState([])
+  const [categorias, setCategorias] = useState([])
   const [lancamentos, setLancamentos] = useState([])
   const [isLoadingEmpresas, setIsLoadingEmpresas] = useState(true)
   const [isLoadingReport, setIsLoadingReport] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
   const yearOptions = useMemo(() => createYearOptions(), [])
-  const report = useMemo(() => buildAnnualReport(lancamentos), [lancamentos])
+  const report = useMemo(() => buildAnnualReport(lancamentos, categorias), [lancamentos, categorias])
   const selectedEmpresa = empresas.find((item) => item.id === Number(filters.empresa_id))
 
   useEffect(() => {
@@ -48,8 +64,14 @@ function ControleFaturamentoPage() {
       return () => controller.abort()
     }
 
-    listarLancamentos({ ...filters, status: 'ATIVO' }, { signal: controller.signal })
-      .then((data) => setLancamentos(data))
+    Promise.all([
+      listarCategorias(filters.empresa_id, { signal: controller.signal }),
+      listarLancamentos({ ...filters, status: 'ATIVO' }, { signal: controller.signal }),
+    ])
+      .then(([categoryData, entryData]) => {
+        setCategorias(categoryData)
+        setLancamentos(entryData)
+      })
       .catch((error) => {
         if (!controller.signal.aborted) setErrorMessage(error.message)
       })
@@ -70,6 +92,7 @@ function ControleFaturamentoPage() {
 
   function clearFilters() {
     setFilters({ empresa_id: '', ano: String(currentYear()) })
+    setCategorias([])
     setLancamentos([])
     setIsLoadingReport(false)
   }
@@ -123,34 +146,40 @@ function ControleFaturamentoPage() {
             <strong>{filters.ano}</strong>
           </div>
 
+          <section className="table-card" aria-busy={isLoadingReport}>
+            <div className="table-card-title"><div><h2>Receita mensal por categoria</h2><p>Valores normais, com RT, acumulados e impostos correspondentes.</p></div></div>
+            {isLoadingReport && <div className="p-4 text-center" role="status"><span className="spinner-border spinner-border-sm" aria-hidden="true" /> Carregando controle anual...</div>}
+            {!isLoadingReport && !errorMessage && (
+              <>
+                <div className="table-responsive">
+                  <table className="table table-hover align-middle mb-0 control-annual-table">
+                    <thead><tr><th className="text-center" scope="col">Mês</th>{report.categories.flatMap((category) => [<th className="text-center" key={`${category.key}-normal`} scope="col">{category.nome}</th>, <th className="text-center" key={`${category.key}-rt`} scope="col">{category.nome} com RT</th>])}<th className="text-center" scope="col">Acum. (mês)</th><th className="text-center" scope="col">Acum. (ano)</th>{report.categories.flatMap((category) => [<th className="text-center" key={`${category.key}-tax-normal`} scope="col">% {category.nome}</th>, <th className="text-center" key={`${category.key}-tax-rt`} scope="col">% {category.nome} com RT</th>])}<th className="text-center" scope="col">Valor impostos</th></tr></thead>
+                    <tbody>{report.rows.map((row) => (
+                      <tr key={row.month}>
+                        <td className="cell-main text-center">{monthName(row.month)}</td>
+                        {report.categories.flatMap((category) => [<RevenueCell entry={row.categories[category.key]?.NORMAL} key={`${category.key}-normal`} />, <RevenueCell entry={row.categories[category.key]?.COM_RT} key={`${category.key}-rt`} />])}
+                        <td className="text-center text-nowrap">{formatCurrency(row.monthTotal)}</td>
+                        <td className="text-center text-nowrap">{formatCurrency(row.yearAccumulated)}</td>
+                        {report.categories.flatMap((category) => [<TaxCell entry={row.categories[category.key]?.NORMAL} key={`${category.key}-tax-normal`} />, <TaxCell entry={row.categories[category.key]?.COM_RT} key={`${category.key}-tax-rt`} />])}
+                        <td className="text-center text-nowrap">{formatCurrency(row.taxTotal)}</td>
+                      </tr>
+                    ))}</tbody>
+                    {report.rows.length > 0 && <tfoot><tr><th className="text-center" scope="row">Total anual</th>{report.categories.flatMap((category) => [<th className="text-center text-nowrap" key={`${category.key}-normal`}>{formatCurrency(report.categoryTotals[category.key].NORMAL.value)}</th>, <th className="text-center text-nowrap" key={`${category.key}-rt`}>{formatCurrency(report.categoryTotals[category.key].COM_RT.value)}</th>])}<th className="text-center text-nowrap">{formatCurrency(report.revenueTotal)}</th><th className="text-center text-nowrap">{formatCurrency(report.revenueTotal)}</th>{report.categories.flatMap((category) => [<th className="text-center text-nowrap" key={`${category.key}-tax-normal`}>{formatCurrency(report.categoryTotals[category.key].NORMAL.taxAmount)}</th>, <th className="text-center text-nowrap" key={`${category.key}-tax-rt`}>{formatCurrency(report.categoryTotals[category.key].COM_RT.taxAmount)}</th>])}<th className="text-center text-nowrap">{formatCurrency(report.taxTotal)}</th></tr></tfoot>}
+                  </table>
+                </div>
+                {!report.rows.length && <TableEmpty hasFilters noun="resultado" onClear={clearFilters} />}
+                <div className="table-footer">Mostrando {report.categories.length} categoria{report.categories.length === 1 ? '' : 's'} em {report.monthsWithRevenue} {report.monthsWithRevenue === 1 ? 'mês' : 'meses'}</div>
+              </>
+            )}
+          </section>
+
           {!isLoadingReport && !errorMessage && (
-            <div className="row g-3 mb-4">
+            <div className="row g-3 mt-1">
               <div className="col-12 col-md-4"><article className="control-metric"><span>Receita anual</span><strong>{formatCurrency(report.revenueTotal)}</strong><small>Soma dos lançamentos ativos</small></article></div>
               <div className="col-12 col-md-4"><article className="control-metric"><span>Impostos calculados</span><strong>{formatCurrency(report.taxTotal)}</strong><small>Conforme percentual de cada categoria</small></article></div>
               <div className="col-12 col-md-4"><article className="control-metric"><span>Meses com receita</span><strong>{report.monthsWithRevenue}</strong><small>De 12 meses no ano</small></article></div>
             </div>
           )}
-
-          <section className="table-card" aria-busy={isLoadingReport}>
-            <div className="table-card-title"><div><h2>Receita por categoria</h2><p>Valores mensais e impostos correspondentes.</p></div></div>
-            {isLoadingReport && <div className="p-4 text-center" role="status"><span className="spinner-border spinner-border-sm" aria-hidden="true" /> Carregando controle anual...</div>}
-            {!isLoadingReport && !errorMessage && (
-              <>
-                <div className="table-responsive">
-                  <table className="table table-hover align-middle mb-0">
-                    <thead><tr><th scope="col">Mês</th><th scope="col">Categoria</th><th className="text-end" scope="col">Receita</th><th className="text-end" scope="col">Imposto</th><th className="text-end" scope="col">Valor do imposto</th><th className="text-end" scope="col">Estoque inicial</th><th className="text-end" scope="col">Estoque final</th><th className="text-end" scope="col">Caixa inicial</th><th className="text-end" scope="col">Caixa final</th></tr></thead>
-                    <tbody>{report.rows.map((item, index) => {
-                      const showMonth = index === 0 || report.rows[index - 1].month !== item.month
-                      return <tr key={item.id}><td className="cell-main">{showMonth ? monthName(item.month) : ''}</td><td>{item.categoria.nome}</td><td className="text-end text-nowrap">{formatCurrency(item.valor)}</td><td className="text-end text-nowrap">{formatPercentage(item.percentual_imposto)}</td><td className="text-end text-nowrap">{formatCurrency(item.taxAmount)}</td><td className="text-end text-nowrap">{showMonth ? formatOptionalCurrency(item.estoque_inicial) : ''}</td><td className="text-end text-nowrap">{showMonth ? formatOptionalCurrency(item.estoque_final) : ''}</td><td className="text-end text-nowrap">{showMonth ? formatOptionalCurrency(item.caixa_inicial) : ''}</td><td className="text-end text-nowrap">{showMonth ? formatOptionalCurrency(item.caixa_final) : ''}</td></tr>
-                    })}</tbody>
-                    {report.rows.length > 0 && <tfoot><tr><th colSpan="2" scope="row">Total anual</th><th className="text-end text-nowrap">{formatCurrency(report.revenueTotal)}</th><td /><th className="text-end text-nowrap">{formatCurrency(report.taxTotal)}</th><td colSpan="4" /></tr></tfoot>}
-                  </table>
-                </div>
-                {!report.rows.length && <TableEmpty hasFilters noun="resultado" onClear={clearFilters} />}
-                <div className="table-footer">Mostrando {report.rows.length} categoria{report.rows.length === 1 ? '' : 's'} em {report.monthsWithRevenue} {report.monthsWithRevenue === 1 ? 'mês' : 'meses'}</div>
-              </>
-            )}
-          </section>
         </>
       )}
     </div>
