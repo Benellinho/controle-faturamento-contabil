@@ -50,10 +50,10 @@ describe('regras do formulario de lancamentos em lote', () => {
 
   test('cria os campos Normal e com RT para cada categoria da empresa', () => {
     assert.deepEqual(createCategoriaItems([{ id: 2, nome: 'Vendas' }, { id: 3, nome: 'Anexo III' }]), [
-      { categoria_id: '2', categoria_nome: 'Vendas', tipo_lancamento: 'NORMAL', tipo_nome: 'Normal', valor: null, percentual_imposto: '', observacao: '' },
-      { categoria_id: '2', categoria_nome: 'Vendas', tipo_lancamento: 'COM_RT', tipo_nome: 'Com RT', valor: null, percentual_imposto: '', observacao: '' },
-      { categoria_id: '3', categoria_nome: 'Anexo III', tipo_lancamento: 'NORMAL', tipo_nome: 'Normal', valor: null, percentual_imposto: '', observacao: '' },
-      { categoria_id: '3', categoria_nome: 'Anexo III', tipo_lancamento: 'COM_RT', tipo_nome: 'Com RT', valor: null, percentual_imposto: '', observacao: '' },
+      { categoria_id: '2', categoria_nome: 'Vendas', tipo_lancamento: 'NORMAL', tipo_nome: 'Normal', valor: 0, percentual_imposto: '', observacao: '' },
+      { categoria_id: '2', categoria_nome: 'Vendas', tipo_lancamento: 'COM_RT', tipo_nome: 'Com RT', valor: 0, percentual_imposto: '', observacao: '' },
+      { categoria_id: '3', categoria_nome: 'Anexo III', tipo_lancamento: 'NORMAL', tipo_nome: 'Normal', valor: 0, percentual_imposto: '', observacao: '' },
+      { categoria_id: '3', categoria_nome: 'Anexo III', tipo_lancamento: 'COM_RT', tipo_nome: 'Com RT', valor: 0, percentual_imposto: '', observacao: '' },
     ])
   })
 
@@ -70,12 +70,19 @@ describe('regras do formulario de lancamentos em lote', () => {
 
   test('valida valor e percentual de cada categoria', () => {
     const values = structuredClone(validValues)
-    values.itens[0].valor = 0
+    values.itens[0].valor = -1
     values.itens[1].percentual_imposto = '7.123'
     const errors = validateLancamentoValues(values)
 
     assert.ok(errors.itens['2-NORMAL'].valor)
     assert.ok(errors.itens['2-COM_RT'].percentual_imposto)
+  })
+
+  test('aceita valor zero em uma categoria', () => {
+    const values = structuredClone(validValues)
+    values.itens[0].valor = 0
+
+    assert.equal(validateLancamentoValues(values).itens, undefined)
   })
 
   test('mascara imposto sem setas e limita a duas casas decimais', () => {

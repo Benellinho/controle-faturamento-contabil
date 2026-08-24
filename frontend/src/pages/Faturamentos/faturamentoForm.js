@@ -56,7 +56,7 @@ export function createCategoriaItems(categorias) {
       categoria_nome: categoria.nome,
       tipo_lancamento: 'NORMAL',
       tipo_nome: 'Normal',
-      valor: null,
+      valor: 0,
       percentual_imposto: '',
       observacao: '',
     },
@@ -65,7 +65,7 @@ export function createCategoriaItems(categorias) {
       categoria_nome: categoria.nome,
       tipo_lancamento: 'COM_RT',
       tipo_nome: 'Com RT',
-      valor: null,
+      valor: 0,
       percentual_imposto: '',
       observacao: '',
     },
@@ -100,8 +100,8 @@ export function validateLancamentoValues(values) {
     const current = {}
     if (!isPositiveSafeId(item.categoria_id)) current.categoria_id = 'Categoria inválida.'
     if (!['NORMAL', 'COM_RT'].includes(item.tipo_lancamento)) current.tipo_lancamento = 'Tipo de lançamento inválido.'
-    if (!Number.isSafeInteger(item.valor) || item.valor <= 0 || item.valor > MAX_VALUE_IN_CENTS) {
-      current.valor = 'Informe um valor maior que zero e dentro do limite permitido.'
+    if (!Number.isSafeInteger(item.valor) || item.valor < 0 || item.valor > MAX_VALUE_IN_CENTS) {
+      current.valor = 'Informe um valor igual ou maior que zero e dentro do limite permitido.'
     }
     if (!isValidTaxPercentage(item.percentual_imposto)) {
       current.percentual_imposto = 'Informe um percentual entre 0 e 100, com até duas casas.'
