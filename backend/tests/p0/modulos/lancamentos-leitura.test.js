@@ -76,6 +76,7 @@ describe('service de leitura de lancamentos', () => {
       empresa_id: 1,
       categoria_id: 2,
       data: '2026-08-20',
+      ano: 2026,
       status: 'ATIVO',
     }
 
@@ -130,7 +131,7 @@ describe('endpoints de leitura de lancamentos', () => {
     })
   })
 
-  test('listagem recebe os quatro filtros validados e convertidos', async () => {
+  test('listagem recebe os cinco filtros validados e convertidos', async () => {
     let receivedFilters
 
     await withApp({
@@ -141,7 +142,7 @@ describe('endpoints de leitura de lancamentos', () => {
     }, async (app) => {
       const response = await app.inject({
         method: 'GET',
-        url: '/api/lancamentos?empresa_id=1&categoria_id=2&data=2026-08-20&status=ATIVO',
+        url: '/api/lancamentos?empresa_id=1&categoria_id=2&data=2026-08-20&ano=2026&status=ATIVO',
       })
 
       assert.equal(response.statusCode, 200)
@@ -149,6 +150,7 @@ describe('endpoints de leitura de lancamentos', () => {
         empresa_id: 1,
         categoria_id: 2,
         data: '2026-08-20',
+        ano: 2026,
         status: 'ATIVO',
       })
       assert.deepEqual(response.json(), [listItemFixture])
@@ -184,6 +186,22 @@ describe('endpoints de leitura de lancamentos', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/lancamentos?data=data-invalida',
+      })
+
+      assert.equal(response.statusCode, 400)
+      assert.equal(response.json().erro.codigo, 'PARAMETROS_INVALIDOS')
+    })
+  })
+
+  test('listagem rejeita ano fora do intervalo suportado', async () => {
+    await withApp({
+      async listar() {
+        return []
+      },
+    }, async (app) => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/lancamentos?ano=1999',
       })
 
       assert.equal(response.statusCode, 400)

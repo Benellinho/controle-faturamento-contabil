@@ -210,6 +210,11 @@ export function createLancamentosRepository(client) {
       if (filters.data !== undefined) {
         query = query.eq('data_referencia', filters.data)
       }
+      if (filters.ano !== undefined) {
+        query = query
+          .gte('data_referencia', `${filters.ano}-01-01`)
+          .lte('data_referencia', `${filters.ano}-12-31`)
+      }
       if (filters.status !== undefined) {
         query = query.eq('status', filters.status)
       }

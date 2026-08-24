@@ -139,6 +139,7 @@ export const listarLancamentosSchema = {
       empresa_id: safeIdSchema,
       categoria_id: safeIdSchema,
       data: { type: 'string', format: 'date' },
+      ano: { type: 'integer', minimum: 2000, maximum: 9999 },
       status: { type: 'string', enum: ['ATIVO', 'SUBSTITUIDO'] },
     },
   },
