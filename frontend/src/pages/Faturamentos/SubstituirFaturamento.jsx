@@ -7,7 +7,6 @@ import MoneyInput from '../../components/forms/MoneyInput'
 import PercentageInput from '../../components/forms/PercentageInput'
 import PageHeader from '../../components/layout/PageHeader'
 import StatusBadge from '../../components/table/StatusBadge'
-import { listarCategorias } from '../../services/empresasApi'
 import { obterLancamento, substituirLancamento } from '../../services/lancamentosApi'
 import { formatCnpj, formatCurrencyFromCents, formatPercentage, formatReferenceMonth } from '../../utils/formatters'
 import { createSingleFlight, referenceDateFromMonth } from './faturamentoForm'
@@ -21,18 +20,14 @@ import {
 function SubstituirFaturamento({ onNavigate, recordId }) {
   const [lancamento, setLancamento] = useState(null)
   const [values, setValues] = useState(null)
-  const [categorias, setCategorias] = useState([])
   const [errors, setErrors] = useState({})
   const [detailError, setDetailError] = useState(null)
   const [apiError, setApiError] = useState('')
-  const [categoriesError, setCategoriesError] = useState('')
   const [replacementError, setReplacementError] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isLoadingCategorias, setIsLoadingCategorias] = useState(true)
   const [isReviewOpen, setIsReviewOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
-  const [categoriesReloadKey, setCategoriesReloadKey] = useState(0)
   const submission = useRef(createSingleFlight())
 
   useEffect(() => {
@@ -55,28 +50,6 @@ function SubstituirFaturamento({ onNavigate, recordId }) {
 
     return () => controller.abort()
   }, [recordId, reloadKey])
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    if (!lancamento || lancamento.status !== 'ATIVO') {
-      return () => controller.abort()
-    }
-
-    listarCategorias(lancamento.empresa.id, { signal: controller.signal })
-      .then((data) => {
-        setCategorias(data)
-        setCategoriesError('')
-      })
-      .catch((error) => {
-        if (!controller.signal.aborted) setCategoriesError(error.message)
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setIsLoadingCategorias(false)
-      })
-
-    return () => controller.abort()
-  }, [lancamento, categoriesReloadKey])
 
   function updateField(field, value) {
     setValues((current) => ({ ...current, [field]: value }))
@@ -124,12 +97,6 @@ function SubstituirFaturamento({ onNavigate, recordId }) {
     setReloadKey((value) => value + 1)
   }
 
-  function retryCategories() {
-    setIsLoadingCategorias(true)
-    setCategoriesError('')
-    setCategoriesReloadKey((value) => value + 1)
-  }
-
   if (!recordId || detailError?.status === 404) {
     return <RecordNotFound label="Lançamento" onBack={() => onNavigate('faturamentos')} />
   }
@@ -170,8 +137,6 @@ function SubstituirFaturamento({ onNavigate, recordId }) {
 
   if (!values) return null
 
-  const selectedCategoria = categorias.find((item) => item.id === Number(values.categoria_id))
-
   return (
     <div className="form-page form-page-wide">
       <button className="detail-back" type="button" onClick={() => onNavigate('faturamento-detalhes', recordId)}>← Voltar ao detalhe</button>
@@ -184,8 +149,7 @@ function SubstituirFaturamento({ onNavigate, recordId }) {
         </div>
         <div className="form-card-body">
           <form noValidate onSubmit={handleReview}>
-            <FormFeedback message={apiError || categoriesError} type="danger" />
-            {categoriesError && <button className="btn btn-outline-danger btn-sm mb-4" disabled={isLoadingCategorias} type="button" onClick={retryCategories}>Recarregar categorias</button>}
+            <FormFeedback message={apiError} type="danger" />
 
             <fieldset className="form-section" disabled={isSubmitting}>
               <legend>Identificação</legend>
@@ -196,12 +160,9 @@ function SubstituirFaturamento({ onNavigate, recordId }) {
                   <div className="form-text">A empresa não pode ser alterada durante uma substituição.</div>
                 </div>
                 <div className="col-12">
-                  <label className="form-label" htmlFor="substituicao-categoria">Categoria <span className="required-mark">*</span></label>
-                  <select className={`form-select ${errors.categoria_id ? 'is-invalid' : ''}`} disabled={isLoadingCategorias} id="substituicao-categoria" onChange={(event) => updateField('categoria_id', event.target.value)} value={values.categoria_id}>
-                    <option value="">{isLoadingCategorias ? 'Carregando categorias...' : 'Selecione uma categoria'}</option>
-                    {categorias.map((categoria) => <option key={categoria.id} value={categoria.id}>{categoria.nome}</option>)}
-                  </select>
-                  {errors.categoria_id && <div className="invalid-feedback">{errors.categoria_id}</div>}
+                  <label className="form-label" htmlFor="substituicao-categoria">Categoria</label>
+                  <input className="form-control" id="substituicao-categoria" readOnly value={lancamento.categoria.nome} />
+                  <div className="form-text">A categoria não pode ser alterada durante uma substituição.</div>
                 </div>
               </div>
             </fieldset>
@@ -247,7 +208,7 @@ function SubstituirFaturamento({ onNavigate, recordId }) {
       <ConfirmModal confirmLabel="Confirmar substituição" isOpen={isReviewOpen} isSubmitting={isSubmitting} onClose={() => setIsReviewOpen(false)} onConfirm={handleConfirm} title="Confirmar substituição">
         <dl className="review-list">
           <div><dt>Empresa</dt><dd>{lancamento.empresa.nome}</dd></div>
-          <div><dt>Categoria</dt><dd>{selectedCategoria?.nome}</dd></div>
+          <div><dt>Categoria</dt><dd>{lancamento.categoria.nome}</dd></div>
           <div><dt>Mês de referência</dt><dd>{formatReferenceMonth(values.data_referencia)}</dd></div>
           <div><dt>Novo valor</dt><dd>{formatCurrencyFromCents(values.valor)}</dd></div>
           <div><dt>Percentual de imposto</dt><dd>{formatPercentage(values.percentual_imposto)}</dd></div>

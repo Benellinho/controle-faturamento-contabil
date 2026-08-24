@@ -2,13 +2,24 @@ import {
   validateLancamentoValues,
 } from './faturamentoForm.js'
 
+export function normalizeCorrectionTaxPercentage(value) {
+  const percentage = Number(value)
+  if (!Number.isFinite(percentage)) return ''
+
+  const normalizedPercentage = percentage > 0 && percentage < 1
+    ? percentage * 100
+    : percentage
+
+  return normalizedPercentage.toFixed(2)
+}
+
 export function createSubstituicaoValues(lancamento) {
   return {
     empresa_id: String(lancamento.empresa.id),
     categoria_id: String(lancamento.categoria.id),
     data_referencia: lancamento.data_referencia,
     valor: Math.round(Number(lancamento.valor) * 100),
-    percentual_imposto: String(lancamento.percentual_imposto),
+    percentual_imposto: normalizeCorrectionTaxPercentage(lancamento.percentual_imposto),
     observacao: lancamento.observacao ?? '',
     motivo_substituicao: '',
   }

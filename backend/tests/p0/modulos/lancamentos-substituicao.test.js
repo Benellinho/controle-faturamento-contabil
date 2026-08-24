@@ -20,6 +20,11 @@ const successFixture = {
   novo_lancamento_id: 16,
 }
 
+const originalFixture = {
+  id: 15,
+  categoria: { id: 2, nome: 'Vendas' },
+}
+
 function fakeServices(lancamentosService) {
   return {
     empresasService: { async listar() { return [] } },
@@ -47,6 +52,9 @@ describe('service de substituicao de lancamentos', () => {
     let receivedPayload
     const service = createLancamentosService({
       lancamentosRepository: {
+        async findById() {
+          return originalFixture
+        },
         async replace(id, payload) {
           receivedId = id
           receivedPayload = payload
@@ -87,6 +95,30 @@ describe('service de substituicao de lancamentos', () => {
       ),
     )
     assert.equal(repositoryCalled, false)
+  })
+
+  test('rejeita alteracao da categoria original sem executar a substituicao', async () => {
+    let replaceCalled = false
+    const service = createLancamentosService({
+      lancamentosRepository: {
+        async findById() {
+          return originalFixture
+        },
+        async replace() {
+          replaceCalled = true
+        },
+      },
+    })
+
+    await assert.rejects(
+      service.substituir(15, { ...validPayload, categoria_id: 3 }),
+      (error) => (
+        error instanceof AppError
+        && error.statusCode === 400
+        && error.code === 'CATEGORIA_IMUTAVEL'
+      ),
+    )
+    assert.equal(replaceCalled, false)
   })
 })
 
@@ -249,6 +281,9 @@ describe('endpoint de substituicao de lancamentos', () => {
   test('rejeita motivo contendo somente espacos', async () => {
     const service = createLancamentosService({
       lancamentosRepository: {
+        async findById() {
+          return originalFixture
+        },
         async replace() {
           throw new Error('O repository nao deveria ser chamado.')
         },

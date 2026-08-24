@@ -31,6 +31,24 @@ export function createLancamentosService({
         )
       }
 
+      const lancamentoOriginal = await lancamentosRepository.findById(id)
+
+      if (!lancamentoOriginal) {
+        throw new AppError(
+          404,
+          'LANCAMENTO_NAO_ENCONTRADO',
+          'O lancamento informado nao foi encontrado.',
+        )
+      }
+
+      if (Number(payload.categoria_id) !== Number(lancamentoOriginal.categoria.id)) {
+        throw new AppError(
+          400,
+          'CATEGORIA_IMUTAVEL',
+          'A categoria nao pode ser alterada durante uma substituicao.',
+        )
+      }
+
       return lancamentosRepository.replace(id, {
         ...payload,
         motivo_substituicao: motivo,

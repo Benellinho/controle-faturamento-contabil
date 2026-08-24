@@ -4,6 +4,7 @@ import { describe, test } from 'node:test'
 import {
   buildSubstituicaoPayload,
   createSubstituicaoValues,
+  normalizeCorrectionTaxPercentage,
   replacementErrorMessage,
   submitSubstituicaoValues,
   validateSubstituicaoValues,
@@ -20,6 +21,12 @@ const lancamento = {
 }
 
 describe('regras do formulario de substituicao', () => {
+  test('converte percentual fracionario legado para exibicao em porcentagem', () => {
+    assert.equal(normalizeCorrectionTaxPercentage(0.01), '1.00')
+    assert.equal(normalizeCorrectionTaxPercentage('0.075'), '7.50')
+    assert.equal(normalizeCorrectionTaxPercentage(7.25), '7.25')
+  })
+
   test('preenche os dados atuais e mantem o motivo vazio', () => {
     assert.deepEqual(createSubstituicaoValues(lancamento), {
       empresa_id: '1',
@@ -97,6 +104,17 @@ describe('regras do formulario de substituicao', () => {
     assert.match(source, /lancamento\.status === 'ATIVO'/)
     assert.match(source, /onNavigate\('substituir-faturamento', lancamento\.id\)/)
     assert.doesNotMatch(source, /Editar lançamento|Excluir lançamento/)
+  })
+
+  test('substituicao exibe a categoria original sem permitir alteracao', async () => {
+    const source = await readFile(
+      new URL('../../../src/pages/Faturamentos/SubstituirFaturamento.jsx', import.meta.url),
+      'utf8',
+    )
+
+    assert.match(source, /id="substituicao-categoria" readOnly value=\{lancamento\.categoria\.nome\}/)
+    assert.match(source, /A categoria não pode ser alterada durante uma substituição\./)
+    assert.doesNotMatch(source, /listarCategorias|<select[^>]+id="substituicao-categoria"/)
   })
 
   test('detalhe navega pelos IDs anterior e substituto retornados pela API', async () => {
