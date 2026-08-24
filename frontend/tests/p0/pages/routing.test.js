@@ -13,6 +13,10 @@ describe('rotas navegaveis do P0', () => {
     assert.deepEqual(navigationFromPath('/lancamentos/novo'), { page: 'novo-faturamento', recordId: null })
   })
 
+  test('resolve a tela de controle anual', () => {
+    assert.deepEqual(navigationFromPath('/controle-anual'), { page: 'controle-anual', recordId: null })
+  })
+
   test('resolve detalhe e substituicao com o ID da URL', () => {
     assert.deepEqual(navigationFromPath('/lancamentos/47'), { page: 'faturamento-detalhes', recordId: 47 })
     assert.deepEqual(navigationFromPath('/lancamentos/47/substituir'), { page: 'substituir-faturamento', recordId: 47 })
@@ -27,6 +31,7 @@ describe('rotas navegaveis do P0', () => {
   test('gera os caminhos canonicos de cada pagina', () => {
     assert.equal(pathForNavigation('faturamentos'), '/lancamentos')
     assert.equal(pathForNavigation('novo-faturamento'), '/lancamentos/novo')
+    assert.equal(pathForNavigation('controle-anual'), '/controle-anual')
     assert.equal(pathForNavigation('faturamento-detalhes', 47), '/lancamentos/47')
     assert.equal(pathForNavigation('substituir-faturamento', 47), '/lancamentos/47/substituir')
     assert.equal(pathForNavigation('faturamento-detalhes', null), null)

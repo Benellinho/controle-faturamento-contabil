@@ -2,7 +2,7 @@ import { apiRequest } from './api.js'
 
 function lancamentosQuery(filters = {}) {
   const query = new URLSearchParams()
-  const allowedFilters = ['empresa_id', 'categoria_id', 'data', 'status']
+  const allowedFilters = ['empresa_id', 'categoria_id', 'data', 'ano', 'status']
 
   for (const key of allowedFilters) {
     const value = filters[key]

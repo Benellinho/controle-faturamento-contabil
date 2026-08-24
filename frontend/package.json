@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:p0:services": "node --test tests/p0/services/api.test.js tests/p0/services/endpoints.test.js tests/p0/services/fluxo-p0.test.js tests/p0/pages/faturamentos-list.test.js tests/p0/pages/faturamento-form.test.js tests/p0/pages/substituicao-form.test.js tests/p0/pages/escopo-p0.test.js tests/p0/pages/routing.test.js tests/p0/pages/formatters.test.js",
+    "test:p0:services": "node --test tests/p0/services/api.test.js tests/p0/services/endpoints.test.js tests/p0/services/fluxo-p0.test.js tests/p0/pages/controle-anual.test.js tests/p0/pages/faturamentos-list.test.js tests/p0/pages/faturamento-form.test.js tests/p0/pages/substituicao-form.test.js tests/p0/pages/escopo-p0.test.js tests/p0/pages/routing.test.js tests/p0/pages/formatters.test.js",
     "test:p0:integracao-remota": "node --test --env-file=.env.local --env-file=../backend/.env tests/p0/integracao/criacao-remota.test.js tests/p0/integracao/substituicao-remota.test.js"
   },
   "dependencies": {

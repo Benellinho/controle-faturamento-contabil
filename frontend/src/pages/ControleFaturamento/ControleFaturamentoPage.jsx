@@ -1,133 +1,151 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../../components/layout/PageHeader'
 import ListFilters from '../../components/table/ListFilters'
-import StatusBadge from '../../components/table/StatusBadge'
 import TableEmpty from '../../components/table/TableEmpty'
-import { categorias, empresas, faturamentos } from '../../mocks/listData'
-import { formatCompetencia, formatCurrency, formatDate } from '../../utils/formatters'
+import { listarEmpresas } from '../../services/empresasApi'
+import { listarLancamentos } from '../../services/lancamentosApi'
+import { formatCnpj, formatCurrency, formatPercentage } from '../../utils/formatters'
+import { buildAnnualReport, createYearOptions, currentYear, monthName } from './controleAnual'
 
-function signedValue(item) {
-  if (item.status !== 'ATIVO') return 0
-  return item.tipo === 'DEVOLUCAO_ESTORNO' ? -item.valor : item.valor
-}
+function ControleFaturamentoPage() {
+  const [filters, setFilters] = useState({ empresa_id: '', ano: String(currentYear()) })
+  const [empresas, setEmpresas] = useState([])
+  const [lancamentos, setLancamentos] = useState([])
+  const [isLoadingEmpresas, setIsLoadingEmpresas] = useState(true)
+  const [isLoadingReport, setIsLoadingReport] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
+  const yearOptions = useMemo(() => createYearOptions(), [])
+  const report = useMemo(() => buildAnnualReport(lancamentos), [lancamentos])
+  const selectedEmpresa = empresas.find((item) => item.id === Number(filters.empresa_id))
 
-function competenciaLabel(value) {
-  const [year, month] = value.split('-')
-  return formatCompetencia(year, month)
-}
+  useEffect(() => {
+    const controller = new AbortController()
 
-function ControleFaturamentoPage({ onNavigate }) {
-  const [filters, setFilters] = useState({ empresa: '', inicio: '', fim: '' })
-  const selectedEmpresa = empresas.find((item) => item.id === Number(filters.empresa))
-  const hasActiveFilters = Boolean(filters.empresa || filters.inicio || filters.fim)
-
-  const controlData = useMemo(() => {
-    if (!filters.empresa) return null
-
-    const companyItems = faturamentos
-      .filter((item) => item.empresa_id === Number(filters.empresa))
-      .sort((a, b) => a.competencia.localeCompare(b.competencia) || a.id - b.id)
-    const periodItems = companyItems.filter((item) => (
-      (!filters.inicio || item.competencia >= filters.inicio) &&
-      (!filters.fim || item.competencia <= filters.fim)
-    ))
-    const activePeriodItems = periodItems.filter((item) => item.status === 'ATIVO')
-    const cumulativeByCompetencia = new Map()
-    let runningTotal = 0
-
-    companyItems
-      .filter((item) => item.status === 'ATIVO')
-      .forEach((item) => {
-        runningTotal += signedValue(item)
-        cumulativeByCompetencia.set(item.competencia, runningTotal)
+    listarEmpresas({ signal: controller.signal })
+      .then((data) => {
+        setEmpresas(data)
+        setErrorMessage('')
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) setErrorMessage(error.message)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoadingEmpresas(false)
       })
 
-    const accumulatedItems = companyItems.filter((item) => (
-      item.status === 'ATIVO' && (!filters.fim || item.competencia <= filters.fim)
-    ))
-    const firstActive = activePeriodItems.at(0)
-    const lastActive = activePeriodItems.at(-1)
+    return () => controller.abort()
+  }, [reloadKey])
 
-    return {
-      items: periodItems,
-      cumulativeByCompetencia,
-      accumulatedTotal: accumulatedItems.reduce((total, item) => total + signedValue(item), 0),
-      initialStock: firstActive?.estoque_inicial ?? null,
-      finalStock: lastActive?.estoque_final ?? null,
-      competencies: new Set(activePeriodItems.map((item) => item.competencia)).size,
+  useEffect(() => {
+    const controller = new AbortController()
+
+    if (!filters.empresa_id || !filters.ano) {
+      return () => controller.abort()
     }
-  }, [filters])
+
+    listarLancamentos({ ...filters, status: 'ATIVO' }, { signal: controller.signal })
+      .then((data) => setLancamentos(data))
+      .catch((error) => {
+        if (!controller.signal.aborted) setErrorMessage(error.message)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoadingReport(false)
+      })
+
+    return () => controller.abort()
+  }, [filters, reloadKey])
 
   function updateFilter(field, value) {
+    const nextEmpresaId = field === 'empresa_id' ? value : filters.empresa_id
+    const nextAno = field === 'ano' ? value : filters.ano
+    setIsLoadingReport(Boolean(nextEmpresaId && nextAno))
+    setErrorMessage('')
     setFilters((current) => ({ ...current, [field]: value }))
   }
 
   function clearFilters() {
-    setFilters({ empresa: '', inicio: '', fim: '' })
+    setFilters({ empresa_id: '', ano: String(currentYear()) })
+    setLancamentos([])
+    setIsLoadingReport(false)
   }
 
-  function categoriaName(id) {
-    return categorias.find((item) => item.id === id)?.nome ?? '—'
+  function retryLoading() {
+    setIsLoadingEmpresas(true)
+    setIsLoadingReport(Boolean(filters.empresa_id && filters.ano))
+    setErrorMessage('')
+    setReloadKey((value) => value + 1)
   }
 
   return (
     <div className="list-page">
-      <PageHeader title="Controle de faturamento" description="Selecione uma empresa para acompanhar os lançamentos, o acumulado e a movimentação dos estoques." />
+      <PageHeader title="Controle anual" description="Consulte a receita mensal por categoria e os impostos da empresa." />
 
-      <ListFilters hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
-        <div className="col-12 col-lg-6">
+      {errorMessage && (
+        <div className="alert alert-danger" role="alert">
+          <span>{errorMessage}</span>{' '}
+          <button className="btn btn-link alert-link p-0" type="button" onClick={retryLoading}>Tentar novamente</button>
+        </div>
+      )}
+
+      <ListFilters hasActiveFilters={Boolean(filters.empresa_id)} onClear={clearFilters}>
+        <div className="col-12 col-lg-8">
           <label className="form-label" htmlFor="controle-empresa">Empresa <span className="required-mark">*</span></label>
-          <select className="form-select" id="controle-empresa" onChange={(event) => updateFilter('empresa', event.target.value)} value={filters.empresa}>
-            <option value="">Selecione uma empresa</option>
-            {empresas.map((empresa) => <option key={empresa.id} value={empresa.id}>{empresa.razao_social}</option>)}
+          <select className="form-select" disabled={isLoadingEmpresas} id="controle-empresa" onChange={(event) => updateFilter('empresa_id', event.target.value)} value={filters.empresa_id}>
+            <option value="">{isLoadingEmpresas ? 'Carregando empresas...' : 'Selecione uma empresa'}</option>
+            {empresas.map((empresa) => <option key={empresa.id} value={empresa.id}>{empresa.nome} — {formatCnpj(empresa.cnpj)}</option>)}
           </select>
         </div>
-        <div className="col-12 col-sm-6 col-lg-3">
-          <label className="form-label" htmlFor="controle-inicio">Competência inicial</label>
-          <input className="form-control" id="controle-inicio" max={filters.fim || undefined} onChange={(event) => updateFilter('inicio', event.target.value)} type="month" value={filters.inicio} />
-        </div>
-        <div className="col-12 col-sm-6 col-lg-3">
-          <label className="form-label" htmlFor="controle-fim">Competência final</label>
-          <input className="form-control" id="controle-fim" min={filters.inicio || undefined} onChange={(event) => updateFilter('fim', event.target.value)} type="month" value={filters.fim} />
+        <div className="col-12 col-sm-6 col-lg-4">
+          <label className="form-label" htmlFor="controle-ano">Ano <span className="required-mark">*</span></label>
+          <select className="form-select" id="controle-ano" onChange={(event) => updateFilter('ano', event.target.value)} value={filters.ano}>
+            {yearOptions.map((year) => <option key={year} value={year}>{year}</option>)}
+          </select>
         </div>
       </ListFilters>
 
-      {!selectedEmpresa && (
+      {!filters.empresa_id && (
         <section className="control-welcome">
           <div className="empty-state-icon" aria-hidden="true">CF</div>
           <h2>Selecione uma empresa</h2>
-          <p>Os indicadores e lançamentos serão carregados depois que uma empresa for selecionada.</p>
+          <p>A receita mensal e os impostos serão exibidos para o ano escolhido.</p>
         </section>
       )}
 
-      {selectedEmpresa && controlData && (
+      {filters.empresa_id && (
         <>
           <div className="control-context">
-            <div><span>Empresa selecionada</span><strong>{selectedEmpresa.razao_social}</strong></div>
-            <StatusBadge status={selectedEmpresa.ativa ? 'ATIVA' : 'INATIVA'} />
+            <div><span>Empresa selecionada</span><strong>{selectedEmpresa?.nome ?? 'Empresa'}</strong></div>
+            <strong>{filters.ano}</strong>
           </div>
 
-          <div className="row g-3 mb-4">
-            <div className="col-12 col-sm-6 col-xl-3"><article className="control-metric"><span>Faturamento acumulado</span><strong>{formatCurrency(controlData.accumulatedTotal)}</strong><small>Até a competência final</small></article></div>
-            <div className="col-12 col-sm-6 col-xl-3"><article className="control-metric"><span>Estoque inicial do período</span><strong>{controlData.initialStock === null ? '—' : formatCurrency(controlData.initialStock)}</strong><small>Primeiro lançamento ativo</small></article></div>
-            <div className="col-12 col-sm-6 col-xl-3"><article className="control-metric"><span>Estoque final do período</span><strong>{controlData.finalStock === null ? '—' : formatCurrency(controlData.finalStock)}</strong><small>Último lançamento ativo</small></article></div>
-            <div className="col-12 col-sm-6 col-xl-3"><article className="control-metric"><span>Competências no período</span><strong>{controlData.competencies}</strong><small>Com lançamento ativo</small></article></div>
-          </div>
-
-          <div className="domain-note" role="note">
-            O modelo atual não possui notas fiscais separadas. Esta consulta apresenta os lançamentos mensais cadastrados em cada competência.
-          </div>
-
-          <section className="table-card">
-            <div className="table-card-title"><div><h2>Lançamentos do período</h2><p>Registros ativos e cancelados permanecem disponíveis para consulta.</p></div></div>
-            <div className="table-responsive">
-              <table className="table table-hover align-middle mb-0">
-                <thead><tr><th scope="col">Competência</th><th scope="col">Referência</th><th scope="col">Categoria</th><th scope="col">Tipo</th><th className="text-end" scope="col">Valor</th><th className="text-end" scope="col">Acumulado</th><th className="text-end" scope="col">Estoque inicial</th><th className="text-end" scope="col">Estoque final</th><th scope="col">Status</th><th className="text-end" scope="col">Ações</th></tr></thead>
-                <tbody>{controlData.items.map((item) => <tr className={item.status === 'CANCELADO' ? 'cancelled-row' : ''} key={item.id}><td>{competenciaLabel(item.competencia)}</td><td>{formatDate(item.data_referencia)}</td><td className="cell-main">{categoriaName(item.categoria_id)}</td><td>{item.tipo === 'FATURAMENTO' ? 'Faturamento' : 'Devolução / estorno'}</td><td className="text-end text-nowrap">{formatCurrency(item.valor)}</td><td className="text-end text-nowrap">{item.status === 'ATIVO' ? formatCurrency(controlData.cumulativeByCompetencia.get(item.competencia)) : '—'}</td><td className="text-end text-nowrap">{formatCurrency(item.estoque_inicial)}</td><td className="text-end text-nowrap">{formatCurrency(item.estoque_final)}</td><td><StatusBadge status={item.status} /></td><td className="text-end"><button className="btn btn-link btn-table-action" type="button" onClick={() => onNavigate('faturamento-detalhes', item.id)}>Visualizar</button></td></tr>)}</tbody>
-              </table>
+          {!isLoadingReport && !errorMessage && (
+            <div className="row g-3 mb-4">
+              <div className="col-12 col-md-4"><article className="control-metric"><span>Receita anual</span><strong>{formatCurrency(report.revenueTotal)}</strong><small>Soma dos lançamentos ativos</small></article></div>
+              <div className="col-12 col-md-4"><article className="control-metric"><span>Impostos calculados</span><strong>{formatCurrency(report.taxTotal)}</strong><small>Conforme percentual de cada categoria</small></article></div>
+              <div className="col-12 col-md-4"><article className="control-metric"><span>Meses com receita</span><strong>{report.monthsWithRevenue}</strong><small>De 12 meses no ano</small></article></div>
             </div>
-            {!controlData.items.length && <TableEmpty hasFilters={Boolean(filters.inicio || filters.fim)} noun="lançamento" onClear={() => setFilters((current) => ({ ...current, inicio: '', fim: '' }))} />}
-            <div className="table-footer">Mostrando {controlData.items.length} lançamentos</div>
+          )}
+
+          <section className="table-card" aria-busy={isLoadingReport}>
+            <div className="table-card-title"><div><h2>Receita por categoria</h2><p>Valores mensais e impostos correspondentes.</p></div></div>
+            {isLoadingReport && <div className="p-4 text-center" role="status"><span className="spinner-border spinner-border-sm" aria-hidden="true" /> Carregando controle anual...</div>}
+            {!isLoadingReport && !errorMessage && (
+              <>
+                <div className="table-responsive">
+                  <table className="table table-hover align-middle mb-0">
+                    <thead><tr><th scope="col">Mês</th><th scope="col">Categoria</th><th className="text-end" scope="col">Receita</th><th className="text-end" scope="col">Imposto</th><th className="text-end" scope="col">Valor do imposto</th></tr></thead>
+                    <tbody>{report.rows.map((item, index) => {
+                      const showMonth = index === 0 || report.rows[index - 1].month !== item.month
+                      return <tr key={item.id}><td className="cell-main">{showMonth ? monthName(item.month) : ''}</td><td>{item.categoria.nome}</td><td className="text-end text-nowrap">{formatCurrency(item.valor)}</td><td className="text-end text-nowrap">{formatPercentage(item.percentual_imposto)}</td><td className="text-end text-nowrap">{formatCurrency(item.taxAmount)}</td></tr>
+                    })}</tbody>
+                    {report.rows.length > 0 && <tfoot><tr><th colSpan="2" scope="row">Total anual</th><th className="text-end text-nowrap">{formatCurrency(report.revenueTotal)}</th><td /><th className="text-end text-nowrap">{formatCurrency(report.taxTotal)}</th></tr></tfoot>}
+                  </table>
+                </div>
+                {!report.rows.length && <TableEmpty hasFilters noun="resultado" onClear={clearFilters} />}
+                <div className="table-footer">Mostrando {report.rows.length} categoria{report.rows.length === 1 ? '' : 's'} em {report.monthsWithRevenue} {report.monthsWithRevenue === 1 ? 'mês' : 'meses'}</div>
+              </>
+            )}
           </section>
         </>
       )}

@@ -10,6 +10,7 @@ export function navigationFromPath(pathname) {
 
   if (normalizedPath === '/' || normalizedPath === '/lancamentos') return { ...listNavigation }
   if (normalizedPath === '/lancamentos/novo') return { page: 'novo-faturamento', recordId: null }
+  if (normalizedPath === '/controle-anual') return { page: 'controle-anual', recordId: null }
 
   const replacementMatch = normalizedPath.match(/^\/lancamentos\/(\d+)\/substituir$/)
   if (replacementMatch) {
@@ -29,6 +30,7 @@ export function navigationFromPath(pathname) {
 export function pathForNavigation(page, recordId = null) {
   if (page === 'faturamentos') return '/lancamentos'
   if (page === 'novo-faturamento') return '/lancamentos/novo'
+  if (page === 'controle-anual') return '/controle-anual'
 
   const validId = validRecordId(recordId)
   if (!validId) return null

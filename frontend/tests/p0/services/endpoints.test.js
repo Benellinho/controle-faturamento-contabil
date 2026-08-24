@@ -68,13 +68,14 @@ describe('endpoints de lancamentos', () => {
       empresa_id: 1,
       categoria_id: '',
       data: '2026-08-21',
+      ano: 2026,
       status: null,
       campo_fora_do_contrato: 'ignorado',
     })
 
     assert.equal(
       requests[0].url,
-      'https://api.exemplo.test/api/lancamentos?empresa_id=1&data=2026-08-21',
+      'https://api.exemplo.test/api/lancamentos?empresa_id=1&data=2026-08-21&ano=2026',
     )
   })
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import AppLayout from './components/layout/AppLayout'
+import ControleFaturamentoPage from './pages/ControleFaturamento/ControleFaturamentoPage'
 import FaturamentoDetails from './pages/Faturamentos/FaturamentoDetails'
 import FaturamentosPage from './pages/Faturamentos/FaturamentosPage'
 import NovoFaturamento from './pages/Faturamentos/NovoFaturamento'
@@ -8,6 +9,7 @@ import { navigationFromPath, pathForNavigation } from './routing'
 
 const pages = {
   faturamentos: FaturamentosPage,
+  'controle-anual': ControleFaturamentoPage,
   'faturamento-detalhes': FaturamentoDetails,
   'novo-faturamento': NovoFaturamento,
   'substituir-faturamento': SubstituirFaturamento,

@@ -8,10 +8,11 @@ async function readSource(relativePath) {
 }
 
 describe('escopo demonstravel do P0', () => {
-  test('menu principal oferece listagem e criacao de lancamentos', () => {
+  test('menu principal oferece lancamentos e controle anual', () => {
     assert.deepEqual(p0Navigation, [
       { id: 'faturamentos', label: 'Lançamentos', icon: 'billing' },
       { id: 'novo-faturamento', label: 'Novos lançamentos', icon: 'add' },
+      { id: 'controle-anual', label: 'Controle anual', icon: 'control' },
     ])
   })
 
@@ -33,12 +34,13 @@ describe('escopo demonstravel do P0', () => {
     assert.match(detailSource, /formatCnpj\(lancamento\.empresa\.cnpj\)/)
   })
 
-  test('aplicacao registra somente paginas do fluxo de lancamentos', async () => {
+  test('aplicacao registra as paginas do fluxo de lancamentos e controle', async () => {
     const source = await readSource('App.jsx')
 
-    assert.doesNotMatch(source, /pages\/(Dashboard|Categorias|ControleFaturamento|Empresas|Historico|Usuarios)/)
-    assert.doesNotMatch(source, /dashboard:|controle:|empresas:|usuarios:|categorias:|historico:/)
+    assert.doesNotMatch(source, /pages\/(Dashboard|Categorias|Empresas|Historico|Usuarios)/)
+    assert.doesNotMatch(source, /dashboard:|empresas:|usuarios:|categorias:|historico:/)
     assert.match(source, /faturamentos: FaturamentosPage/)
+    assert.match(source, /'controle-anual': ControleFaturamentoPage/)
     assert.match(source, /'novo-faturamento': NovoFaturamento/)
     assert.match(source, /'substituir-faturamento': SubstituirFaturamento/)
   })
