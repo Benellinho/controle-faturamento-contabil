@@ -22,6 +22,17 @@ const monetaryValueSchema = {
   multipleOf: 0.01,
 }
 
+const balanceValueSchema = {
+  type: 'number',
+  minimum: 0,
+  maximum: 999999999999.99,
+  multipleOf: 0.01,
+}
+
+const nullableBalanceValueSchema = {
+  anyOf: [balanceValueSchema, { type: 'null' }],
+}
+
 const taxPercentageSchema = {
   type: 'number',
   minimum: 0,
@@ -45,6 +56,10 @@ const lancamentoListItemSchema = {
     'categoria',
     'valor',
     'percentual_imposto',
+    'estoque_inicial',
+    'estoque_final',
+    'caixa_inicial',
+    'caixa_final',
     'status',
     'criado_em',
   ],
@@ -55,6 +70,10 @@ const lancamentoListItemSchema = {
     categoria: categoriaResponseSchema,
     valor: monetaryValueSchema,
     percentual_imposto: taxPercentageSchema,
+    estoque_inicial: nullableBalanceValueSchema,
+    estoque_final: nullableBalanceValueSchema,
+    caixa_inicial: nullableBalanceValueSchema,
+    caixa_final: nullableBalanceValueSchema,
     status: { type: 'string', enum: ['ATIVO', 'SUBSTITUIDO'] },
     criado_em: { type: 'string' },
   },
@@ -70,6 +89,10 @@ const lancamentoCreationResponseSchema = {
     'data_referencia',
     'valor',
     'percentual_imposto',
+    'estoque_inicial',
+    'estoque_final',
+    'caixa_inicial',
+    'caixa_final',
     'observacao',
     'status',
     'substitui_lancamento_id',
@@ -84,6 +107,10 @@ const lancamentoCreationResponseSchema = {
     data_referencia: referenceDateSchema,
     valor: monetaryValueSchema,
     percentual_imposto: taxPercentageSchema,
+    estoque_inicial: balanceValueSchema,
+    estoque_final: balanceValueSchema,
+    caixa_inicial: balanceValueSchema,
+    caixa_final: balanceValueSchema,
     observacao: nullableStringSchema,
     status: { type: 'string', const: 'ATIVO' },
     substitui_lancamento_id: { type: 'null' },
@@ -169,13 +196,17 @@ export const criarLancamentoSchema = {
   body: {
     type: 'object',
     additionalProperties: false,
-    required: ['empresa_id', 'categoria_id', 'data_referencia', 'valor', 'percentual_imposto'],
+    required: ['empresa_id', 'categoria_id', 'data_referencia', 'valor', 'percentual_imposto', 'estoque_inicial', 'estoque_final', 'caixa_inicial', 'caixa_final'],
     properties: {
       empresa_id: safeIdSchema,
       categoria_id: safeIdSchema,
       data_referencia: referenceDateSchema,
       valor: monetaryValueSchema,
       percentual_imposto: taxPercentageSchema,
+      estoque_inicial: balanceValueSchema,
+      estoque_final: balanceValueSchema,
+      caixa_inicial: balanceValueSchema,
+      caixa_final: balanceValueSchema,
       observacao: nullableStringSchema,
     },
   },
@@ -188,10 +219,14 @@ export const criarLancamentosLoteSchema = {
   body: {
     type: 'object',
     additionalProperties: false,
-    required: ['empresa_id', 'data_referencia', 'itens'],
+    required: ['empresa_id', 'data_referencia', 'estoque_inicial', 'estoque_final', 'caixa_inicial', 'caixa_final', 'itens'],
     properties: {
       empresa_id: safeIdSchema,
       data_referencia: referenceDateSchema,
+      estoque_inicial: balanceValueSchema,
+      estoque_final: balanceValueSchema,
+      caixa_inicial: balanceValueSchema,
+      caixa_final: balanceValueSchema,
       itens: {
         type: 'array',
         minItems: 1,

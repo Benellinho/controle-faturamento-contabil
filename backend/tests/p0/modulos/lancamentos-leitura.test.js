@@ -18,6 +18,10 @@ const listItemFixture = {
   },
   valor: 5500,
   percentual_imposto: 7.25,
+  estoque_inicial: 10000,
+  estoque_final: 12500,
+  caixa_inicial: 5000,
+  caixa_final: 6200,
   status: 'ATIVO',
   criado_em: '2026-08-20T11:00:00',
 }

@@ -14,6 +14,10 @@ const monthlyReferenceMigrationUrl = new URL(
   '../../../../supabase/migrations/20260821040000_normalizar_data_referencia_mensal_p0.sql',
   import.meta.url,
 )
+const balancesMigrationUrl = new URL(
+  '../../../../supabase/migrations/20260824000000_adicionar_saldos_estoque_caixa_p0.sql',
+  import.meta.url,
+)
 
 test('migration adiciona imposto e lote atomico restrito a service role', async () => {
   const sql = await readFile(migrationUrl, 'utf8')
@@ -47,4 +51,20 @@ test('migration complementar normaliza a referencia para o primeiro dia do mes',
 
   assert.match(sql, /date_trunc\('month', data_referencia\)::DATE/)
   assert.match(sql, /CHECK \(EXTRACT\(DAY FROM data_referencia\) = 1\)/)
+})
+
+test('migration adiciona saldos mensais ao lote e preserva na substituicao', async () => {
+  const sql = await readFile(balancesMigrationUrl, 'utf8')
+
+  for (const field of ['estoque_inicial', 'estoque_final', 'caixa_inicial', 'caixa_final']) {
+    assert.match(sql, new RegExp(`ADD COLUMN IF NOT EXISTS ${field} NUMERIC\\(14,2\\)`))
+    assert.match(sql, new RegExp(`${field} >= 0`))
+  }
+
+  assert.match(sql, /CREATE OR REPLACE FUNCTION public\.criar_lancamentos_lote_p0/)
+  assert.match(sql, /p_estoque_inicial NUMERIC\(14,2\)/)
+  assert.match(sql, /p_caixa_final NUMERIC\(14,2\)/)
+  assert.match(sql, /CREATE TRIGGER trg_herdar_saldos_lancamento_substituto_p0/)
+  assert.match(sql, /NEW\.caixa_final := v_original\.caixa_final/)
+  assert.match(sql, /^COMMIT;/m)
 })

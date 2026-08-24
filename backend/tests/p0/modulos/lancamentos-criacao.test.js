@@ -11,6 +11,10 @@ const validPayload = {
   data_referencia: '2026-08-01',
   valor: 5000.55,
   percentual_imposto: 7.25,
+  estoque_inicial: 10000,
+  estoque_final: 12500,
+  caixa_inicial: 5000,
+  caixa_final: 6200,
   observacao: 'Lancamento de demonstracao.',
 }
 
@@ -27,6 +31,10 @@ const createdFixture = {
 const validBatchPayload = {
   empresa_id: 1,
   data_referencia: '2026-08-01',
+  estoque_inicial: 10000,
+  estoque_final: 12500,
+  caixa_inicial: 5000,
+  caixa_final: 6200,
   itens: [
     { categoria_id: 2, valor: 5000.55, percentual_imposto: 7.25, observacao: 'Vendas.' },
     { categoria_id: 3, valor: 1500, percentual_imposto: 3 },
@@ -173,6 +181,10 @@ describe('repository de criacao de lancamentos', () => {
       data_referencia: '2026-08-01',
       valor: '5000.55',
       percentual_imposto: '7.2500',
+      estoque_inicial: '10000.00',
+      estoque_final: '12500.00',
+      caixa_inicial: '5000.00',
+      caixa_final: '6200.00',
       observacao: 'Lancamento de demonstracao.',
       status: 'ATIVO',
       substitui_lancamento_id: null,
@@ -234,6 +246,10 @@ describe('repository de criacao de lancamentos', () => {
     assert.deepEqual(rpcParameters, {
       p_empresa_id: 1,
       p_data_referencia: '2026-08-01',
+      p_estoque_inicial: 10000,
+      p_estoque_final: 12500,
+      p_caixa_inicial: 5000,
+      p_caixa_final: 6200,
       p_itens: [
         { categoria_id: 2, valor: 5000.55, percentual_imposto: 7.25, observacao: 'Vendas.' },
         { categoria_id: 3, valor: 1500, percentual_imposto: 3, observacao: null },
@@ -292,6 +308,10 @@ describe('endpoint de criacao de lancamentos', () => {
       data_referencia: '2026-08-01',
       valor: 5000,
       percentual_imposto: 7.25,
+      estoque_inicial: 10000,
+      estoque_final: 12500,
+      caixa_inicial: 5000,
+      caixa_final: 6200,
     }
 
     await withApp({
@@ -344,6 +364,10 @@ describe('endpoint de criacao de lancamentos', () => {
     ['percentual negativo', { ...validPayload, percentual_imposto: -0.01 }],
     ['percentual acima de cem', { ...validPayload, percentual_imposto: 100.01 }],
     ['percentual com mais de duas casas', { ...validPayload, percentual_imposto: 7.123 }],
+    ['estoque inicial ausente', { ...validPayload, estoque_inicial: undefined }],
+    ['estoque final negativo', { ...validPayload, estoque_final: -0.01 }],
+    ['caixa inicial ausente', { ...validPayload, caixa_inicial: undefined }],
+    ['caixa final negativo', { ...validPayload, caixa_final: -0.01 }],
     ['data invalida', { ...validPayload, data_referencia: '2026-02-30' }],
     ['data fora do primeiro dia', { ...validPayload, data_referencia: '2026-08-20' }],
     ['status reservado', { ...validPayload, status: 'SUBSTITUIDO' }],
