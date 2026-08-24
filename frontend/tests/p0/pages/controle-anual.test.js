@@ -7,7 +7,7 @@ import {
 } from '../../../src/pages/ControleFaturamento/controleAnual.js'
 
 const lancamentos = [
-  { id: 3, data_referencia: '2026-02-01', valor: 1000, percentual_imposto: 10, status: 'ATIVO', categoria: { nome: 'Serviços' } },
+  { id: 3, data_referencia: '2026-02-01', valor: 1000, percentual_imposto: 10, estoque_inicial: 10000, estoque_final: 12500, caixa_inicial: 5000, caixa_final: 6200, status: 'ATIVO', categoria: { nome: 'Serviços' } },
   { id: 2, data_referencia: '2026-01-01', valor: 500, percentual_imposto: 5, status: 'SUBSTITUIDO', categoria: { nome: 'Produtos' } },
   { id: 1, data_referencia: '2026-01-01', valor: 2000, percentual_imposto: 7.5, status: 'ATIVO', categoria: { nome: 'Produtos' } },
 ]
@@ -21,6 +21,8 @@ describe('controle anual de faturamento', () => {
     assert.equal(report.revenueTotal, 3000)
     assert.equal(report.taxTotal, 250)
     assert.equal(report.monthsWithRevenue, 2)
+    assert.equal(report.rows[1].estoque_inicial, 10000)
+    assert.equal(report.rows[1].caixa_final, 6200)
   })
 
   test('gera opcoes anuais e nomes de meses em portugues', () => {

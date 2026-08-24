@@ -92,6 +92,10 @@ describe('endpoints de lancamentos', () => {
       data_referencia: '2026-08-01',
       valor: 5000,
       percentual_imposto: 7.25,
+      estoque_inicial: 10000,
+      estoque_final: 12500,
+      caixa_inicial: 5000,
+      caixa_final: 6200,
     }
 
     await criarLancamento(payload)
@@ -104,6 +108,10 @@ describe('endpoints de lancamentos', () => {
     const payload = {
       empresa_id: 1,
       data_referencia: '2026-08-01',
+      estoque_inicial: 10000,
+      estoque_final: 12500,
+      caixa_inicial: 5000,
+      caixa_final: 6200,
       itens: [
         { categoria_id: 2, valor: 5000, percentual_imposto: 7.25 },
         { categoria_id: 3, valor: 1500, percentual_imposto: 3 },

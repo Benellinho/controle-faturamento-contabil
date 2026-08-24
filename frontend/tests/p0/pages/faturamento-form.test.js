@@ -19,6 +19,10 @@ import {
 const validValues = {
   empresa_id: '1',
   data_referencia: '2026-08-01',
+  estoque_inicial: 1_000_000,
+  estoque_final: 1_250_000,
+  caixa_inicial: 500_000,
+  caixa_final: 620_000,
   itens: [
     { categoria_id: '2', categoria_nome: 'Vendas', valor: 500_000, percentual_imposto: '7.25', observacao: ' Principal. ' },
     { categoria_id: '3', categoria_nome: 'Anexo III', valor: 150_000, percentual_imposto: '3', observacao: ' ' },
@@ -30,6 +34,10 @@ describe('regras do formulario de lancamentos em lote', () => {
     assert.deepEqual(createInitialLancamentoValues(new Date(2026, 7, 21)), {
       empresa_id: '',
       data_referencia: '2026-08-01',
+      estoque_inicial: null,
+      estoque_final: null,
+      caixa_inicial: null,
+      caixa_final: null,
       itens: [],
     })
     assert.equal(currentMonthReferenceDate(new Date(2027, 0, 15)), '2027-01-01')
@@ -47,7 +55,11 @@ describe('regras do formulario de lancamentos em lote', () => {
 
   test('exige empresa e ao menos uma categoria, mantendo o mes atual valido', () => {
     assert.deepEqual(Object.keys(validateLancamentoValues(createInitialLancamentoValues(new Date(2026, 7, 21)))).sort(), [
+      'caixa_final',
+      'caixa_inicial',
       'empresa_id',
+      'estoque_final',
+      'estoque_inicial',
       'itens',
     ])
   })
@@ -77,6 +89,10 @@ describe('regras do formulario de lancamentos em lote', () => {
     assert.deepEqual(buildLancamentosLotePayload(validValues), {
       empresa_id: 1,
       data_referencia: '2026-08-01',
+      estoque_inicial: 10000,
+      estoque_final: 12500,
+      caixa_inicial: 5000,
+      caixa_final: 6200,
       itens: [
         { categoria_id: 2, valor: 5000, percentual_imposto: 7.25, observacao: 'Principal.' },
         { categoria_id: 3, valor: 1500, percentual_imposto: 3 },
@@ -128,6 +144,10 @@ describe('regras do formulario de lancamentos em lote', () => {
     assert.match(source, /% de imposto/)
     assert.match(source, /<PercentageInput/)
     assert.match(source, /type="month"/)
+    assert.match(source, /Estoque inicial/)
+    assert.match(source, /Estoque final/)
+    assert.match(source, /Caixa inicial/)
+    assert.match(source, /Caixa final/)
     assert.doesNotMatch(source, /type="number"[^>]+percentual_imposto/)
     assert.match(source, /className="col-12 col-md-7"[\s\S]+categoria-\$\{item\.categoria_id\}-valor/)
     assert.match(source, /className="col-12 col-md-5"[\s\S]+categoria-\$\{item\.categoria_id\}-imposto/)

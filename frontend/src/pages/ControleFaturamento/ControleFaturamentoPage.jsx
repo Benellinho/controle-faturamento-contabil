@@ -7,6 +7,10 @@ import { listarLancamentos } from '../../services/lancamentosApi'
 import { formatCnpj, formatCurrency, formatPercentage } from '../../utils/formatters'
 import { buildAnnualReport, createYearOptions, currentYear, monthName } from './controleAnual'
 
+function formatOptionalCurrency(value) {
+  return value === null ? '—' : formatCurrency(value)
+}
+
 function ControleFaturamentoPage() {
   const [filters, setFilters] = useState({ empresa_id: '', ano: String(currentYear()) })
   const [empresas, setEmpresas] = useState([])
@@ -134,12 +138,12 @@ function ControleFaturamentoPage() {
               <>
                 <div className="table-responsive">
                   <table className="table table-hover align-middle mb-0">
-                    <thead><tr><th scope="col">Mês</th><th scope="col">Categoria</th><th className="text-end" scope="col">Receita</th><th className="text-end" scope="col">Imposto</th><th className="text-end" scope="col">Valor do imposto</th></tr></thead>
+                    <thead><tr><th scope="col">Mês</th><th scope="col">Categoria</th><th className="text-end" scope="col">Receita</th><th className="text-end" scope="col">Imposto</th><th className="text-end" scope="col">Valor do imposto</th><th className="text-end" scope="col">Estoque inicial</th><th className="text-end" scope="col">Estoque final</th><th className="text-end" scope="col">Caixa inicial</th><th className="text-end" scope="col">Caixa final</th></tr></thead>
                     <tbody>{report.rows.map((item, index) => {
                       const showMonth = index === 0 || report.rows[index - 1].month !== item.month
-                      return <tr key={item.id}><td className="cell-main">{showMonth ? monthName(item.month) : ''}</td><td>{item.categoria.nome}</td><td className="text-end text-nowrap">{formatCurrency(item.valor)}</td><td className="text-end text-nowrap">{formatPercentage(item.percentual_imposto)}</td><td className="text-end text-nowrap">{formatCurrency(item.taxAmount)}</td></tr>
+                      return <tr key={item.id}><td className="cell-main">{showMonth ? monthName(item.month) : ''}</td><td>{item.categoria.nome}</td><td className="text-end text-nowrap">{formatCurrency(item.valor)}</td><td className="text-end text-nowrap">{formatPercentage(item.percentual_imposto)}</td><td className="text-end text-nowrap">{formatCurrency(item.taxAmount)}</td><td className="text-end text-nowrap">{showMonth ? formatOptionalCurrency(item.estoque_inicial) : ''}</td><td className="text-end text-nowrap">{showMonth ? formatOptionalCurrency(item.estoque_final) : ''}</td><td className="text-end text-nowrap">{showMonth ? formatOptionalCurrency(item.caixa_inicial) : ''}</td><td className="text-end text-nowrap">{showMonth ? formatOptionalCurrency(item.caixa_final) : ''}</td></tr>
                     })}</tbody>
-                    {report.rows.length > 0 && <tfoot><tr><th colSpan="2" scope="row">Total anual</th><th className="text-end text-nowrap">{formatCurrency(report.revenueTotal)}</th><td /><th className="text-end text-nowrap">{formatCurrency(report.taxTotal)}</th></tr></tfoot>}
+                    {report.rows.length > 0 && <tfoot><tr><th colSpan="2" scope="row">Total anual</th><th className="text-end text-nowrap">{formatCurrency(report.revenueTotal)}</th><td /><th className="text-end text-nowrap">{formatCurrency(report.taxTotal)}</th><td colSpan="4" /></tr></tfoot>}
                   </table>
                 </div>
                 {!report.rows.length && <TableEmpty hasFilters noun="resultado" onClear={clearFilters} />}

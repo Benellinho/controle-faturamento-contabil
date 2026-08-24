@@ -149,6 +149,33 @@ function FaturamentoForm({ initialEmpresaId, onCancel, onCreated }) {
           </div>
         </fieldset>
 
+        <fieldset className="form-section" disabled={isSubmitting}>
+          <legend>Saldos da competência</legend>
+          <p className="form-section-description">Informe os saldos de estoque e caixa referentes ao mês selecionado.</p>
+          <div className="row g-3">
+            <div className="col-12 col-md-6">
+              <label className="form-label" htmlFor="faturamento-estoque-inicial">Estoque inicial <span className="required-mark">*</span></label>
+              <MoneyInput id="faturamento-estoque-inicial" invalid={Boolean(errors.estoque_inicial)} onChange={(value) => updateField('estoque_inicial', value)} value={values.estoque_inicial} />
+              {errors.estoque_inicial && <div className="invalid-feedback">{errors.estoque_inicial}</div>}
+            </div>
+            <div className="col-12 col-md-6">
+              <label className="form-label" htmlFor="faturamento-estoque-final">Estoque final <span className="required-mark">*</span></label>
+              <MoneyInput id="faturamento-estoque-final" invalid={Boolean(errors.estoque_final)} onChange={(value) => updateField('estoque_final', value)} value={values.estoque_final} />
+              {errors.estoque_final && <div className="invalid-feedback">{errors.estoque_final}</div>}
+            </div>
+            <div className="col-12 col-md-6">
+              <label className="form-label" htmlFor="faturamento-caixa-inicial">Caixa inicial <span className="required-mark">*</span></label>
+              <MoneyInput id="faturamento-caixa-inicial" invalid={Boolean(errors.caixa_inicial)} onChange={(value) => updateField('caixa_inicial', value)} value={values.caixa_inicial} />
+              {errors.caixa_inicial && <div className="invalid-feedback">{errors.caixa_inicial}</div>}
+            </div>
+            <div className="col-12 col-md-6">
+              <label className="form-label" htmlFor="faturamento-caixa-final">Caixa final <span className="required-mark">*</span></label>
+              <MoneyInput id="faturamento-caixa-final" invalid={Boolean(errors.caixa_final)} onChange={(value) => updateField('caixa_final', value)} value={values.caixa_final} />
+              {errors.caixa_final && <div className="invalid-feedback">{errors.caixa_final}</div>}
+            </div>
+          </div>
+        </fieldset>
+
         <fieldset className="form-section" disabled={isSubmitting || isLoadingCategorias || !values.empresa_id}>
           <legend>Categorias da empresa</legend>
           <p className="form-section-description">Preencha valor e percentual de imposto para todas as categorias. O imposto é calculado automaticamente e não é armazenado.</p>
@@ -197,6 +224,12 @@ function FaturamentoForm({ initialEmpresaId, onCancel, onCreated }) {
 
       <ConfirmModal confirmLabel="Confirmar todos" isOpen={isReviewOpen} isSubmitting={isSubmitting} onClose={() => setIsReviewOpen(false)} onConfirm={handleConfirm} title="Confirmar lançamentos">
         <p><strong>{selectedEmpresa?.nome}</strong><br />Mês de referência: {formatReferenceMonth(values.data_referencia)}</p>
+        <dl className="review-list">
+          <div><dt>Estoque inicial</dt><dd>{formatCurrencyFromCents(values.estoque_inicial)}</dd></div>
+          <div><dt>Estoque final</dt><dd>{formatCurrencyFromCents(values.estoque_final)}</dd></div>
+          <div><dt>Caixa inicial</dt><dd>{formatCurrencyFromCents(values.caixa_inicial)}</dd></div>
+          <div><dt>Caixa final</dt><dd>{formatCurrencyFromCents(values.caixa_final)}</dd></div>
+        </dl>
         <div className="table-responsive">
           <table className="table table-sm align-middle mb-0">
             <thead><tr><th>Categoria</th><th className="text-end">Valor</th><th className="text-end">Imposto</th></tr></thead>

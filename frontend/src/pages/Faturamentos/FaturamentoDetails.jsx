@@ -91,6 +91,13 @@ function FaturamentoDetails({ onNavigate, recordId }) {
         <DetailItem className="col-12" label="Observação" value={lancamento.observacao || '—'} />
       </DetailSection>
 
+      <DetailSection title="Saldos da competência">
+        <DetailItem label="Estoque inicial" value={lancamento.estoque_inicial === null ? 'Não informado' : formatCurrency(lancamento.estoque_inicial)} />
+        <DetailItem label="Estoque final" value={lancamento.estoque_final === null ? 'Não informado' : formatCurrency(lancamento.estoque_final)} />
+        <DetailItem label="Caixa inicial" value={lancamento.caixa_inicial === null ? 'Não informado' : formatCurrency(lancamento.caixa_inicial)} />
+        <DetailItem label="Caixa final" value={lancamento.caixa_final === null ? 'Não informado' : formatCurrency(lancamento.caixa_final)} />
+      </DetailSection>
+
       <DetailSection title="Informações do registro">
         <DetailItem label="Status" value={<StatusBadge status={lancamento.status} />} />
         <DetailItem label="Criado em" value={formatDateTime(lancamento.criado_em)} />

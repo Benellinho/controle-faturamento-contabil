@@ -41,6 +41,10 @@ export function createInitialLancamentoValues(date = new Date(), empresaId = nul
       ? String(normalizedEmpresaId)
       : '',
     data_referencia: currentMonthReferenceDate(date),
+    estoque_inicial: null,
+    estoque_final: null,
+    caixa_inicial: null,
+    caixa_final: null,
     itens: [],
   }
 }
@@ -63,6 +67,11 @@ export function validateLancamentoValues(values) {
   }
   if (!isValidIsoDate(values.data_referencia) || !values.data_referencia.endsWith('-01')) {
     errors.data_referencia = 'Informe um mês de referência válido.'
+  }
+  for (const field of ['estoque_inicial', 'estoque_final', 'caixa_inicial', 'caixa_final']) {
+    if (!Number.isSafeInteger(values[field]) || values[field] < 0 || values[field] > MAX_VALUE_IN_CENTS) {
+      errors[field] = 'Informe um valor igual ou maior que zero e dentro do limite permitido.'
+    }
   }
   if (!Array.isArray(values.itens) || values.itens.length === 0) {
     errors.itens = 'A empresa precisa possuir ao menos uma categoria cadastrada.'
@@ -90,6 +99,10 @@ export function buildLancamentosLotePayload(values) {
   return {
     empresa_id: Number(values.empresa_id),
     data_referencia: values.data_referencia,
+    estoque_inicial: values.estoque_inicial / 100,
+    estoque_final: values.estoque_final / 100,
+    caixa_inicial: values.caixa_inicial / 100,
+    caixa_final: values.caixa_final / 100,
     itens: values.itens.map((item) => {
       const observacao = item.observacao.trim()
       return {
