@@ -1,4 +1,28 @@
 :root,
+:root[data-theme="exata"] {
+  --color-dark: #000000;
+  --color-dark-secondary: #000000;
+  --color-primary: #8f0000;
+  --color-primary-dark: #000000;
+  --color-primary-rgb: 143, 0, 0;
+  --color-accent: #946703;
+  --color-accent-rgb: 148, 103, 3;
+  --color-brand-background: #946703;
+  --color-brand-text: #000000;
+  --color-background: #f7f7f7;
+  --color-surface: #f7f7f7;
+  --color-text: #000000;
+  --color-text-muted: rgba(0, 0, 0, .64);
+  --color-border: rgba(0, 0, 0, .14);
+  --sidebar-width: 250px;
+
+  --bs-primary: var(--color-primary);
+  --bs-primary-rgb: var(--color-primary-rgb);
+  --bs-body-color: var(--color-text);
+  --bs-body-bg: var(--color-background);
+  --bs-border-color: var(--color-border);
+}
+
 :root[data-theme="ocean"] {
   --color-dark: #222831;
   --color-dark-secondary: #393e46;
@@ -12,13 +36,6 @@
   --color-text: #222831;
   --color-text-muted: #6c757d;
   --color-border: #dfe2e5;
-  --sidebar-width: 250px;
-
-  --bs-primary: var(--color-primary);
-  --bs-primary-rgb: var(--color-primary-rgb);
-  --bs-body-color: var(--color-text);
-  --bs-body-bg: var(--color-background);
-  --bs-border-color: var(--color-border);
 }
 
 :root[data-theme="sage"] {

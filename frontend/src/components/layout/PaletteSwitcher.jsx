@@ -48,7 +48,15 @@ function PaletteSwitcher() {
               type="button"
             >
               <span className="palette-swatches" aria-hidden="true">
-                {palette.colors.map((color) => <span key={color} style={{ backgroundColor: color }} />)}
+                {palette.colors.map((color, index) => (
+                  <span
+                    key={color}
+                    style={{
+                      backgroundColor: color,
+                      flexGrow: palette.distribution?.[index] ?? 1,
+                    }}
+                  />
+                ))}
               </span>
               <span>{palette.label}</span>
               {currentPalette === palette.id && <Icon className="palette-check" name="check" size={16} />}

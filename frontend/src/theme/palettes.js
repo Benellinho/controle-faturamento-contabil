@@ -1,6 +1,12 @@
-export const paletteStorageKey = 'controle-faturamento-palette'
+export const paletteStorageKey = 'controle-faturamento-palette-v2'
 
 export const palettes = [
+  {
+    id: 'exata',
+    label: 'Exata',
+    colors: ['#8F0000', '#000000', '#946703', '#F7F7F7'],
+    distribution: [25, 25, 25, 25],
+  },
   {
     id: 'sage',
     label: 'Sálvia',
@@ -23,7 +29,7 @@ export const palettes = [
   },
 ]
 
-export const defaultPalette = 'sage'
+export const defaultPalette = 'exata'
 
 export function getStoredPalette() {
   try {

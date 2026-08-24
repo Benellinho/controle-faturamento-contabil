@@ -139,6 +139,54 @@ a {
     color: var(--color-primary);
 }
 
+:root[data-theme="exata"] .app-sidebar {
+    background: var(--color-dark);
+    color: var(--color-background);
+}
+
+:root[data-theme="exata"] .sidebar-brand,
+:root[data-theme="exata"] .palette-switcher,
+:root[data-theme="exata"] .sidebar-scope {
+    border-color: rgba(247, 247, 247, .18);
+}
+
+:root[data-theme="exata"] .sidebar-brand small,
+:root[data-theme="exata"] .sidebar-label,
+:root[data-theme="exata"] .sidebar-link,
+:root[data-theme="exata"] .palette-toggle,
+:root[data-theme="exata"] .palette-toggle-copy small,
+:root[data-theme="exata"] .sidebar-scope strong,
+:root[data-theme="exata"] .sidebar-scope span,
+:root[data-theme="exata"] .sidebar-close {
+    color: rgba(247, 247, 247, .78);
+}
+
+:root[data-theme="exata"] .sidebar-brand strong,
+:root[data-theme="exata"] .palette-toggle-copy strong {
+    color: var(--color-background);
+}
+
+:root[data-theme="exata"] .sidebar-link:hover,
+:root[data-theme="exata"] .palette-toggle:hover,
+:root[data-theme="exata"] .palette-toggle[aria-expanded="true"] {
+    background: rgba(247, 247, 247, .1);
+    color: var(--color-background);
+}
+
+:root[data-theme="exata"] .sidebar-link.active {
+    background: rgba(247, 247, 247, .12);
+    color: var(--color-background);
+    box-shadow: inset 3px 0 var(--color-accent);
+}
+
+:root[data-theme="exata"] .sidebar-link.active svg {
+    color: var(--color-accent);
+}
+
+:root[data-theme="exata"] .palette-toggle:focus-visible {
+    outline-color: var(--color-accent);
+}
+
 .palette-switcher {
     position: relative;
     padding: .75rem;
@@ -250,6 +298,10 @@ a {
 .palette-check {
     margin-left: auto;
     color: var(--color-primary-dark);
+}
+
+:root[data-theme="exata"] .palette-check {
+    color: var(--color-accent);
 }
 
 .sidebar-scope {
@@ -370,6 +422,11 @@ a {
     letter-spacing: .07em;
     line-height: 1;
     padding: .36rem .48rem;
+}
+
+:root[data-theme="exata"] .demo-badge {
+    background: rgba(var(--color-accent-rgb), .14);
+    color: var(--color-accent);
 }
 
 .summary-card {
@@ -563,6 +620,10 @@ textarea.form-control {
     color: #c33d4d;
 }
 
+:root[data-theme="exata"] .required-mark {
+    color: var(--color-accent);
+}
+
 .required-note {
     flex: 0 0 auto;
     color: var(--color-text-muted);
@@ -621,6 +682,15 @@ textarea.form-control {
     border: 1px solid var(--color-border);
     border-radius: 6px;
     background: color-mix(in srgb, var(--color-surface) 96%, var(--color-primary));
+}
+
+:root[data-theme="exata"] .category-entry {
+    border-left: 3px solid var(--color-accent);
+    background: var(--color-surface);
+}
+
+:root[data-theme="exata"] .category-entry h3 {
+    color: var(--color-accent);
 }
 
 .category-entry h3 {
@@ -884,6 +954,17 @@ textarea.form-control {
     font-weight: 750;
     letter-spacing: .08em;
     text-transform: uppercase;
+}
+
+:root[data-theme="exata"] .detail-eyebrow {
+    color: var(--color-accent);
+}
+
+:root[data-theme="exata"] .form-card,
+:root[data-theme="exata"] .filters-card,
+:root[data-theme="exata"] .table-card,
+:root[data-theme="exata"] .detail-section {
+    border-top-color: var(--color-accent);
 }
 
 .detail-page-header h1 {
