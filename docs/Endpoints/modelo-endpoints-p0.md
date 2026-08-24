@@ -227,7 +227,7 @@ Cria um lançamento comum.
 - empresa e categoria devem existir;
 - a categoria deve pertencer à empresa;
 - a data deve ser válida e representar o primeiro dia do mês (`YYYY-MM-01`);
-- o valor deve ser maior que zero;
+- na criação, o valor deve ser igual ou maior que zero;
 - o percentual de imposto deve estar entre `0` e `100`, com até duas casas decimais;
 - `observacao` é opcional.
 

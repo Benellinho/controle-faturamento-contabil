@@ -54,7 +54,7 @@ Uma empresa possui várias categorias e vários lançamentos. Uma categoria pert
 | `empresa_id` | `BIGINT` | Empresa do lançamento, obrigatório |
 | `categoria_id` | `BIGINT` | Categoria do lançamento, obrigatório |
 | `data_referencia` | `DATE` | Obrigatório, sempre no primeiro dia do mês |
-| `valor` | `NUMERIC(14,2)` | Obrigatório e maior que zero |
+| `valor` | `NUMERIC(14,2)` | Obrigatório e igual ou maior que zero |
 | `percentual_imposto` | `NUMERIC(5,2)` | Obrigatório, entre `0` e `100` |
 | `observacao` | `TEXT` | Opcional |
 | `status` | `VARCHAR(20)` | `ATIVO` ou `SUBSTITUIDO` |
@@ -87,7 +87,7 @@ CREATE TABLE lancamentos (
     data_referencia DATE NOT NULL
         CONSTRAINT lancamentos_data_referencia_primeiro_dia_check
         CHECK (EXTRACT(DAY FROM data_referencia) = 1),
-    valor NUMERIC(14,2) NOT NULL CHECK (valor > 0),
+    valor NUMERIC(14,2) NOT NULL CHECK (valor >= 0),
     percentual_imposto NUMERIC(5,2) NOT NULL
         CHECK (percentual_imposto >= 0 AND percentual_imposto <= 100),
     observacao TEXT,

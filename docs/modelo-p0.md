@@ -124,7 +124,7 @@ Campos do formulário:
 - empresa — obrigatória, identificada por nome e CNPJ;
 - mês de referência — obrigatório, iniciado no mês atual e persistido como o primeiro dia do mês;
 - todas as categorias da empresa — obrigatórias e exibidas juntas;
-- valor por categoria — obrigatório e maior que zero;
+- valor por categoria — obrigatório e igual ou maior que zero;
 - percentual de imposto por categoria — obrigatório, entre `0` e `100`, com até duas casas decimais;
 - observação por categoria — opcional.
 
