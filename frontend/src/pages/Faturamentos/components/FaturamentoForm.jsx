@@ -226,12 +226,15 @@ function FaturamentoForm({ initialEmpresaId, onCancel, onCreated }) {
 
       <ConfirmModal confirmLabel="Confirmar todos" isOpen={isReviewOpen} isSubmitting={isSubmitting} onClose={() => setIsReviewOpen(false)} onConfirm={handleConfirm} title="Confirmar lançamentos">
         <p><strong>{selectedEmpresa?.nome}</strong><br />Mês de referência: {formatReferenceMonth(values.data_referencia)}</p>
-        <dl className="review-list">
-          <div><dt>Estoque inicial</dt><dd>{formatCurrencyFromCents(values.estoque_inicial)}</dd></div>
-          <div><dt>Estoque final</dt><dd>{formatCurrencyFromCents(values.estoque_final)}</dd></div>
-          <div><dt>Caixa inicial</dt><dd>{formatCurrencyFromCents(values.caixa_inicial)}</dd></div>
-          <div><dt>Caixa final</dt><dd>{formatCurrencyFromCents(values.caixa_final)}</dd></div>
-        </dl>
+        <div className="table-responsive mb-3">
+          <table className="table table-sm align-middle mb-0 review-balance-table">
+            <thead><tr><th scope="col">Saldo</th><th className="text-end" scope="col">Inicial</th><th className="text-end" scope="col">Final</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Estoque</th><td className="text-end">{formatCurrencyFromCents(values.estoque_inicial)}</td><td className="text-end">{formatCurrencyFromCents(values.estoque_final)}</td></tr>
+              <tr><th scope="row">Caixa</th><td className="text-end">{formatCurrencyFromCents(values.caixa_inicial)}</td><td className="text-end">{formatCurrencyFromCents(values.caixa_final)}</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div className="table-responsive">
           <table className="table table-sm align-middle mb-0">
             <thead><tr><th>Categoria</th><th className="text-end">Valor</th><th className="text-end">Imposto</th></tr></thead>
