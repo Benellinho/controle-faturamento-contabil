@@ -4,6 +4,7 @@ import Sidebar from './Sidebar'
 
 function AppLayout({ children, currentPage, onNavigate }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isColdStartNoticeVisible, setIsColdStartNoticeVisible] = useState(true)
 
   return (
     <div className="app-shell">
@@ -19,7 +20,16 @@ function AppLayout({ children, currentPage, onNavigate }) {
           <span className="mobile-brand">Lançamentos contábeis</span>
           <span className="demo-badge">DEMO</span>
         </header>
-        <main className="app-content">{children}</main>
+        <main className="app-content">
+          {isColdStartNoticeVisible && (
+            <div className="alert alert-info alert-dismissible cold-start-notice" role="status">
+              <strong>Primeiro acesso pode demorar.</strong>{' '}
+              A API pode levar até cerca de 1 minuto para iniciar. Aguarde o carregamento sem atualizar a página.
+              <button className="btn-close" type="button" aria-label="Fechar aviso" onClick={() => setIsColdStartNoticeVisible(false)} />
+            </div>
+          )}
+          {children}
+        </main>
       </div>
     </div>
   )

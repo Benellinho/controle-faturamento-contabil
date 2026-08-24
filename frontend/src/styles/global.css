@@ -749,6 +749,10 @@ textarea.form-control {
     font-size: .8rem;
 }
 
+.cold-start-notice {
+    margin-bottom: 1.25rem;
+}
+
 .list-page {
     width: 100%;
 }

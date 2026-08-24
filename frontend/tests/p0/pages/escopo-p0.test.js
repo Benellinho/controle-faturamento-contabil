@@ -53,6 +53,15 @@ describe('escopo demonstravel do P0', () => {
     assert.match(source, /aria-current=/)
   })
 
+  test('layout avisa sobre o cold start da API e permite fechar o aviso', async () => {
+    const source = await readSource('components/layout/AppLayout.jsx')
+
+    assert.match(source, /A API pode levar até cerca de 1 minuto para iniciar/)
+    assert.match(source, /Aguarde o carregamento sem atualizar a página/)
+    assert.match(source, /setIsColdStartNoticeVisible\(false\)/)
+    assert.match(source, /aria-label="Fechar aviso"/)
+  })
+
   test('modal de confirmacao controla foco, Tab e Escape', async () => {
     const source = await readSource('components/common/ConfirmModal.jsx')
 
