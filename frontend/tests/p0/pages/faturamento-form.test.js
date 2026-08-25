@@ -85,6 +85,19 @@ describe('regras do formulario de lancamentos em lote', () => {
     assert.equal(validateLancamentoValues(values).itens, undefined)
   })
 
+  test('aceita valores negativos no caixa inicial e final', () => {
+    const values = structuredClone(validValues)
+    values.caixa_inicial = -500_000
+    values.caixa_final = -620_000
+
+    const errors = validateLancamentoValues(values)
+
+    assert.equal(errors.caixa_inicial, undefined)
+    assert.equal(errors.caixa_final, undefined)
+    assert.equal(buildLancamentosLotePayload(values).caixa_inicial, -5000)
+    assert.equal(buildLancamentosLotePayload(values).caixa_final, -6200)
+  })
+
   test('mascara imposto sem setas e limita a duas casas decimais', () => {
     assert.equal(maskPercentageInput('1'), '0,01')
     assert.equal(maskPercentageInput('0,012'), '0,12')
@@ -161,6 +174,8 @@ describe('regras do formulario de lancamentos em lote', () => {
     assert.match(source, /Estoque final/)
     assert.match(source, /Caixa inicial/)
     assert.match(source, /Caixa final/)
+    assert.match(source, /allowNegative id="faturamento-caixa-inicial"/)
+    assert.match(source, /allowNegative id="faturamento-caixa-final"/)
     assert.match(source, /review-balance-table/)
     assert.match(source, /<th scope="col">Saldo<\/th><th className="text-end" scope="col">Inicial<\/th><th className="text-end" scope="col">Final<\/th>/)
     assert.match(source, /<tr><th scope="row">Estoque<\/th>/)

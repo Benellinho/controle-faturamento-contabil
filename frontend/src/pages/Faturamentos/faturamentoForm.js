@@ -85,9 +85,14 @@ export function validateLancamentoValues(values) {
   if (!isValidIsoDate(values.data_referencia) || !values.data_referencia.endsWith('-01')) {
     errors.data_referencia = 'Informe um mês de referência válido.'
   }
-  for (const field of ['estoque_inicial', 'estoque_final', 'caixa_inicial', 'caixa_final']) {
+  for (const field of ['estoque_inicial', 'estoque_final']) {
     if (!Number.isSafeInteger(values[field]) || values[field] < 0 || values[field] > MAX_VALUE_IN_CENTS) {
       errors[field] = 'Informe um valor igual ou maior que zero e dentro do limite permitido.'
+    }
+  }
+  for (const field of ['caixa_inicial', 'caixa_final']) {
+    if (!Number.isSafeInteger(values[field]) || Math.abs(values[field]) > MAX_VALUE_IN_CENTS) {
+      errors[field] = 'Informe um valor dentro do limite permitido.'
     }
   }
   if (!Array.isArray(values.itens) || values.itens.length === 0) {

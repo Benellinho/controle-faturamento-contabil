@@ -166,12 +166,12 @@ function FaturamentoForm({ initialEmpresaId, onCancel, onCreated }) {
             </div>
             <div className="col-12 col-md-6">
               <label className="form-label" htmlFor="faturamento-caixa-inicial">Caixa inicial <span className="required-mark">*</span></label>
-              <MoneyInput id="faturamento-caixa-inicial" invalid={Boolean(errors.caixa_inicial)} onChange={(value) => updateField('caixa_inicial', value)} value={values.caixa_inicial} />
+              <MoneyInput allowNegative id="faturamento-caixa-inicial" invalid={Boolean(errors.caixa_inicial)} onChange={(value) => updateField('caixa_inicial', value)} value={values.caixa_inicial} />
               {errors.caixa_inicial && <div className="invalid-feedback">{errors.caixa_inicial}</div>}
             </div>
             <div className="col-12 col-md-6">
               <label className="form-label" htmlFor="faturamento-caixa-final">Caixa final <span className="required-mark">*</span></label>
-              <MoneyInput id="faturamento-caixa-final" invalid={Boolean(errors.caixa_final)} onChange={(value) => updateField('caixa_final', value)} value={values.caixa_final} />
+              <MoneyInput allowNegative id="faturamento-caixa-final" invalid={Boolean(errors.caixa_final)} onChange={(value) => updateField('caixa_final', value)} value={values.caixa_final} />
               {errors.caixa_final && <div className="invalid-feedback">{errors.caixa_final}</div>}
             </div>
           </div>
