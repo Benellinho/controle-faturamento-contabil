@@ -296,6 +296,25 @@ describe('endpoint de criacao de lancamentos', () => {
     })
   })
 
+  test('POST /api/lancamentos/lote aceita caixa inicial e final negativos', async () => {
+    const payload = { ...validBatchPayload, caixa_inicial: -5000, caixa_final: -6200 }
+
+    await withApp({
+      async criarLote(receivedPayload) {
+        assert.deepEqual(receivedPayload, payload)
+        return batchFixture
+      },
+    }, async (app) => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/lancamentos/lote',
+        payload,
+      })
+
+      assert.equal(response.statusCode, 201)
+    })
+  })
+
   test('POST /api/lancamentos cria um registro ATIVO com HTTP 201', async () => {
     let receivedPayload
 
@@ -314,6 +333,23 @@ describe('endpoint de criacao de lancamentos', () => {
       assert.equal(response.statusCode, 201)
       assert.deepEqual(receivedPayload, validPayload)
       assert.deepEqual(response.json(), createdFixture)
+    })
+  })
+
+  test('POST /api/lancamentos aceita caixa inicial e final negativos', async () => {
+    const payload = { ...validPayload, caixa_inicial: -5000, caixa_final: -6200 }
+
+    await withApp({
+      async criar(receivedPayload) {
+        assert.deepEqual(receivedPayload, payload)
+        return { ...createdFixture, caixa_inicial: -5000, caixa_final: -6200 }
+      },
+    }, async (app) => {
+      const response = await app.inject({ method: 'POST', url: '/api/lancamentos', payload })
+
+      assert.equal(response.statusCode, 201)
+      assert.equal(response.json().caixa_inicial, -5000)
+      assert.equal(response.json().caixa_final, -6200)
     })
   })
 
@@ -401,7 +437,7 @@ describe('endpoint de criacao de lancamentos', () => {
     ['estoque inicial ausente', { ...validPayload, estoque_inicial: undefined }],
     ['estoque final negativo', { ...validPayload, estoque_final: -0.01 }],
     ['caixa inicial ausente', { ...validPayload, caixa_inicial: undefined }],
-    ['caixa final negativo', { ...validPayload, caixa_final: -0.01 }],
+    ['caixa final abaixo do limite', { ...validPayload, caixa_final: -1000000000000 }],
     ['data invalida', { ...validPayload, data_referencia: '2026-02-30' }],
     ['data fora do primeiro dia', { ...validPayload, data_referencia: '2026-08-20' }],
     ['status reservado', { ...validPayload, status: 'SUBSTITUIDO' }],

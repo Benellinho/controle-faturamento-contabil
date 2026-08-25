@@ -38,6 +38,17 @@ const nullableBalanceValueSchema = {
   anyOf: [balanceValueSchema, { type: 'null' }],
 }
 
+const cashValueSchema = {
+  type: 'number',
+  minimum: -999999999999.99,
+  maximum: 999999999999.99,
+  multipleOf: 0.01,
+}
+
+const nullableCashValueSchema = {
+  anyOf: [cashValueSchema, { type: 'null' }],
+}
+
 const taxPercentageSchema = {
   type: 'number',
   minimum: 0,
@@ -84,8 +95,8 @@ const lancamentoListItemSchema = {
     percentual_imposto: taxPercentageSchema,
     estoque_inicial: nullableBalanceValueSchema,
     estoque_final: nullableBalanceValueSchema,
-    caixa_inicial: nullableBalanceValueSchema,
-    caixa_final: nullableBalanceValueSchema,
+    caixa_inicial: nullableCashValueSchema,
+    caixa_final: nullableCashValueSchema,
     status: { type: 'string', enum: ['ATIVO', 'SUBSTITUIDO'] },
     criado_em: { type: 'string' },
   },
@@ -123,8 +134,8 @@ const lancamentoCreationResponseSchema = {
     percentual_imposto: taxPercentageSchema,
     estoque_inicial: balanceValueSchema,
     estoque_final: balanceValueSchema,
-    caixa_inicial: balanceValueSchema,
-    caixa_final: balanceValueSchema,
+    caixa_inicial: cashValueSchema,
+    caixa_final: cashValueSchema,
     observacao: nullableStringSchema,
     status: { type: 'string', const: 'ATIVO' },
     substitui_lancamento_id: { type: 'null' },
@@ -220,8 +231,8 @@ export const criarLancamentoSchema = {
       percentual_imposto: taxPercentageSchema,
       estoque_inicial: balanceValueSchema,
       estoque_final: balanceValueSchema,
-      caixa_inicial: balanceValueSchema,
-      caixa_final: balanceValueSchema,
+      caixa_inicial: cashValueSchema,
+      caixa_final: cashValueSchema,
       observacao: nullableStringSchema,
     },
   },
@@ -240,8 +251,8 @@ export const criarLancamentosLoteSchema = {
       data_referencia: referenceDateSchema,
       estoque_inicial: balanceValueSchema,
       estoque_final: balanceValueSchema,
-      caixa_inicial: balanceValueSchema,
-      caixa_final: balanceValueSchema,
+      caixa_inicial: cashValueSchema,
+      caixa_final: cashValueSchema,
       itens: {
         type: 'array',
         minItems: 1,
